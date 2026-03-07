@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Minero Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:     #0a0a0a;
+    --bg-panel:    #111111;
+    --bg-card:     #181818;
+    --bg-hover:    #1f1f1f;
+    --border:      #2a2a2a;
+    --border-bright: #333333;
+    --orange:      #f97316;
+    --orange-dim:  #7c3a0e;
+    --orange-glow: rgba(249,115,22,0.15);
+    --text-primary: #f0f0f0;
+    --text-secondary: #888888;
+    --text-muted:  #444444;
+    --green:       #22c55e;
+    --green-dim:   #14532d;
+    --red:         #ef4444;
+    --red-dim:     #7f1d1d;
+    --yellow:      #eab308;
+    --yellow-dim:  #713f12;
+    --blue:        #3b82f6;
+    --blue-dim:    #1e3a8a;
+    --sidebar-w:   240px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    top: 0; left: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-icon svg { width: 20px; height: 20px; fill: #000; }
+
+  .logo-text { line-height: 1.1; }
+  .logo-text .name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+  .logo-text .sub {
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-section {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 16px 4px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .nav-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-left-color: var(--border-bright);
+  }
+
+  .nav-item.active {
+    background: var(--orange-glow);
+    color: var(--orange);
+    border-left-color: var(--orange);
+  }
+
+  .nav-item .icon {
+    width: 16px; height: 16px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+
+  .nav-item.active .icon { opacity: 1; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--red);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .sidebar-bottom {
+    margin-top: auto;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+
+  .user-avatar {
+    width: 30px; height: 30px;
+    background: var(--orange-dim);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--orange);
+    font-family: 'Barlow Condensed', sans-serif;
+    flex-shrink: 0;
+  }
+
+  .user-info .uname {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .user-info .urole {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── MAIN ────────────────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR ──────────────────────────────────────── */
+  .topbar {
+    height: 52px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .topbar-date {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .topbar-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse-green 2s infinite;
+  }
+
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── CONTENT ─────────────────────────────────────── */
+  .content {
+    padding: 24px;
+    flex: 1;
+  }
+
+  /* ── STAT CARDS ──────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border-bright); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.green::before  { background: var(--green); }
+  .stat-card.orange::before { background: var(--orange); }
+  .stat-card.red::before    { background: var(--red); }
+  .stat-card.yellow::before { background: var(--yellow); }
+  .stat-card.blue::before   { background: var(--blue); }
+
+  .stat-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    margin-bottom: 6px;
+  }
+
+  .stat-card.green  .stat-value { color: var(--green); }
+  .stat-card.orange .stat-value { color: var(--orange); }
+  .stat-card.red    .stat-value { color: var(--red); }
+  .stat-card.yellow .stat-value { color: var(--yellow); }
+  .stat-card.blue   .stat-value { color: var(--blue); }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .stat-icon {
+    position: absolute;
+    bottom: 12px; right: 14px;
+    opacity: 0.06;
+    font-size: 52px;
+    line-height: 1;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+  }
+
+  /* ── GRID 2 COLS ──────────────────────────────────── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+    animation: fadeUp 0.5s ease 0.1s both;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 12px;
+    animation: fadeUp 0.5s ease 0.2s both;
+  }
+
+  /* ── PANEL ────────────────────────────────────────── */
+  .panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+  }
+
+  .panel-action {
+    font-size: 11px;
+    color: var(--orange);
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: opacity 0.15s;
+  }
+  .panel-action:hover { opacity: 0.7; }
+
+  .panel-body { padding: 16px; }
+
+  /* ── ASISTENCIA BAR CHART ─────────────────────────── */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 100px;
+    padding: 0 4px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    border-radius: 3px 3px 0 0;
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 3px;
+    position: relative;
+  }
+
+  .bar.today { background: var(--orange); }
+  .bar.past  { background: var(--border-bright); }
+
+  .bar-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .bar-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-secondary);
+  }
+
+  /* ── TABLA ────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+
+  thead th {
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-hover); }
+
+  tbody td {
+    padding: 9px 12px;
+    color: var(--text-secondary);
+  }
+
+  tbody td:first-child { color: var(--text-primary); font-weight: 500; }
+
+  /* ── BADGES ───────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .badge.green  { background: var(--green-dim);  color: var(--green); }
+  .badge.red    { background: var(--red-dim);    color: var(--red); }
+  .badge.orange { background: var(--orange-dim); color: var(--orange); }
+  .badge.yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.blue   { background: var(--blue-dim);   color: var(--blue); }
+
+  /* ── ALERTAS ──────────────────────────────────────── */
+  .alert-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-panel);
+    animation: slideIn 0.3s ease both;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .alert-item:nth-child(2) { animation-delay: 0.05s; }
+  .alert-item:nth-child(3) { animation-delay: 0.1s; }
+  .alert-item:nth-child(4) { animation-delay: 0.15s; }
+
+  .alert-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .alert-dot.red    { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+  .alert-dot.orange { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+  .alert-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+
+  .alert-text {
+    font-size: 12px;
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .alert-time {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+
+  /* ── PENDIENTES ───────────────────────────────────── */
+  .pending-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pending-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .pending-item:first-child { padding-top: 0; }
+
+  .pending-info .pname {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .pending-info .ptype {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .pending-actions { display: flex; gap: 6px; }
+
+  .btn-sm {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    transition: opacity 0.15s;
+  }
+  .btn-sm:hover { opacity: 0.8; }
+  .btn-sm.approve { background: var(--green-dim); color: var(--green); }
+  .btn-sm.reject  { background: var(--red-dim);   color: var(--red); }
+
+  /* ── MINI STATS ───────────────────────────────────── */
+  .mini-stat {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mini-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .mini-stat:first-child { padding-top: 0; }
+
+  .mini-stat .mlabel {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .mini-stat .mval {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  /* ── GAUGE ────────────────────────────────────────── */
+  .gauge-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+  }
+
+  .gauge {
+    position: relative;
+    width: 120px;
+    height: 60px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .gauge-bg {
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 14px solid var(--border);
+    top: 0; left: 0;
+    clip-path: inset(0 0 50% 0);
+  }
+
+  .gauge-fill {
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 14px solid var(--green);
+    top: 0; left: 0;
+    clip-path: inset(0 0 50% 0);
+    transform-origin: 60px 60px;
+    transform: rotate(calc(var(--pct, 0) * 1.8deg - 180deg));
+    transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+    filter: drop-shadow(0 0 4px var(--green));
+  }
+
+  .gauge-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green);
+    text-align: center;
+  }
+
+  .gauge-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  /* ── TURNOS ───────────────────────────────────────── */
+  .turno-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+
+  .turno-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .turno-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .turno-progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .turno-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .turno-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  /* ── SCROLLBAR ────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  /* ── LOADING SKELETON ─────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(90deg,
+      var(--bg-panel) 25%,
+      var(--bg-hover) 50%,
+      var(--bg-panel) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+</style>
+</head>
+
+<body data-modulo="dashboard">
+
+<!-- ── SIDEBAR ─────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="name">Minera Pataz</div>
+      <div class="sub">Sistema Integral</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item active" href="dashboard.html" data-modulo="dashboard">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Trabajadores
+    </a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tareos
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" href="legajo.html" data-modulo="legajo">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Legajo Digital
+    </a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Permisos
+      <span class="nav-badge">1</span>
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Almacén
+    </a>
+    <a class="nav-item" href="epps.html" data-modulo="epps">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      EPPs
+      <span class="nav-badge">2</span>
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Adelantos
+    </a>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Planilla
+    </a>
+  </div>
+
+    <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>Configuración
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar">AD</div>
+      <div class="user-info">
+        <div class="uname">admin</div>
+        <div class="urole">Administrador</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="topbar-live">
+      <div class="live-dot"></div>
+      EN VIVO
+    </div>
+    <div class="topbar-date" id="clock">—</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">Presentes hoy</div>
+        <div class="stat-value" id="stat-presentes">—</div>
+        <div class="stat-sub">de <span id="stat-total">—</span> trabajadores</div>
+        <div class="stat-icon">✓</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Doblas activas</div>
+        <div class="stat-value" id="stat-doblas">—</div>
+        <div class="stat-sub">trabajando en día libre</div>
+        <div class="stat-icon">×2</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Ausentes</div>
+        <div class="stat-value" id="stat-ausentes">—</div>
+        <div class="stat-sub">sin justificación</div>
+        <div class="stat-icon">✗</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">Alertas activas</div>
+        <div class="stat-value" id="stat-alertas">—</div>
+        <div class="stat-sub">EPPs + documentos + stock</div>
+        <div class="stat-icon">!</div>
+      </div>
+    </div>
+
+    <!-- GRID 2 -->
+    <div class="grid-2">
+
+      <!-- ASISTENCIA SEMANAL -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Asistencia — Últimos 7 días</div>
+          <a href="tareos.html" data-modulo="tareos" class="panel-action">Ver mes →</a>
+        </div>
+        <div class="panel-body">
+          <div class="bar-chart" id="bar-chart">
+            <!-- generado por JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ALERTAS -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Alertas del sistema</div>
+          <a href="epps.html" data-modulo="epps" class="panel-action">Ver todas →</a>
+        </div>
+        <div class="panel-body">
+          <div class="alert-list" id="alert-list">
+            <!-- generado por JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GRID 3 -->
+    <div class="grid-3">
+
+      <!-- TABLA ASISTENCIA HOY -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Personal en mina hoy</div>
+          <div class="panel-action">Registrar →</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Trabajador</th>
+                <th>Cargo</th>
+                <th>Entrada</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-asistencia">
+              <tr>
+                <td colspan="4" style="text-align:center;padding:24px;color:var(--text-muted);font-size:11px;">
+                  Cargando datos...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PENDIENTES -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Pendientes</div>
+        </div>
+        <div class="panel-body">
+          <div id="pendientes-list">
+            <div class="pending-item">
+              <div class="pending-info">
+                <div class="pname">Juan C. Quispe</div>
+                <div class="ptype">Adelanto — S/. 200</div>
+              </div>
+              <div class="pending-actions">
+                <button class="btn-sm approve">✓</button>
+                <button class="btn-sm reject">✗</button>
+              </div>
+            </div>
+            <div class="pending-item">
+              <div class="pending-info">
+                <div class="pname">Carlos R. Medina</div>
+                <div class="ptype">Permiso médico — 2 días</div>
+              </div>
+              <div class="pending-actions">
+                <button class="btn-sm approve">✓</button>
+                <button class="btn-sm reject">✗</button>
+              </div>
+            </div>
+            <div class="pending-item">
+              <div class="pending-info">
+                <div class="pname">Rosa L. Torres</div>
+                <div class="ptype">Adelanto — S/. 150</div>
+              </div>
+              <div class="pending-actions">
+                <button class="btn-sm approve">✓</button>
+                <button class="btn-sm reject">✗</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALMACÉN CRÍTICO -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Almacén</div>
+        </div>
+        <div class="panel-body">
+          <div id="almacen-stats">
+            <div class="mini-stat">
+              <span class="mlabel">Stock crítico</span>
+              <span class="mval" id="m-critico" style="color:var(--red)">—</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mlabel">Herram. prestadas</span>
+              <span class="mval" id="m-herram">—</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mlabel">EPPs por vencer</span>
+              <span class="mval" id="m-epp" style="color:var(--yellow)">—</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mlabel">EPPs vencidos</span>
+              <span class="mval" id="m-epp-v" style="color:var(--red)">—</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mlabel">Docs por vencer</span>
+              <span class="mval" id="m-docs" style="color:var(--yellow)">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let TOKEN = localStorage.getItem('token') || '';
+
+// ── RELOJ ─────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('es-PE', {weekday:'short', day:'2-digit', month:'short'}).toUpperCase() +
+    '  ' +
+    now.toLocaleTimeString('es-PE', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── API CALL ──────────────────────────────────────────────
+async function apiFetch(path) {
+  try {
+    const r = await fetch(API + path, {
+      headers: { 'Authorization': 'Bearer ' + TOKEN }
+    });
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) {
+    console.warn('API error:', path, e);
+    return null;
+  }
+}
+
+// ── DASHBOARD RESUMEN ─────────────────────────────────────
+async function loadResumen() {
+  const data = await apiFetch('/dashboard/resumen');
+  if (!data) { useMockData(); return; }
+
+  document.getElementById('stat-presentes').textContent = data.asistencia.presentes;
+  document.getElementById('stat-total').textContent     = data.asistencia.total_trabajadores;
+  document.getElementById('stat-doblas').textContent    = data.asistencia.doblas;
+  document.getElementById('stat-ausentes').textContent  = data.asistencia.ausentes;
+
+  const alertas =
+    data.epps.por_vencer_15_dias +
+    data.epps.vencidos +
+    data.documentos.por_vencer_30_dias +
+    data.almacen.materiales_stock_critico +
+    data.pendientes.adelantos +
+    data.pendientes.permisos;
+
+  document.getElementById('stat-alertas').textContent = alertas;
+  document.getElementById('m-critico').textContent    = data.almacen.materiales_stock_critico;
+  document.getElementById('m-herram').textContent     = data.almacen.herramientas_sin_devolver;
+  document.getElementById('m-epp').textContent        = data.epps.por_vencer_15_dias;
+  document.getElementById('m-epp-v').textContent      = data.epps.vencidos;
+  document.getElementById('m-docs').textContent       = data.documentos.por_vencer_30_dias;
+
+  buildAlerts(data);
+}
+
+// ── ALERTAS ───────────────────────────────────────────────
+function buildAlerts(data) {
+  const list = document.getElementById('alert-list');
+  const alerts = [];
+
+  if (data.epps.vencidos > 0)
+    alerts.push({ color: 'red',    text: `${data.epps.vencidos} EPP(s) vencidos sin reemplazar`, time: 'Hoy' });
+  if (data.epps.por_vencer_15_dias > 0)
+    alerts.push({ color: 'orange', text: `${data.epps.por_vencer_15_dias} EPP(s) vencen en 15 días`, time: 'Próx.' });
+  if (data.documentos.por_vencer_30_dias > 0)
+    alerts.push({ color: 'yellow', text: `${data.documentos.por_vencer_30_dias} documento(s) por vencer`, time: '30 días' });
+  if (data.almacen.materiales_stock_critico > 0)
+    alerts.push({ color: 'red',    text: `${data.almacen.materiales_stock_critico} material(es) en stock crítico`, time: 'Ahora' });
+  if (data.pendientes.adelantos > 0)
+    alerts.push({ color: 'orange', text: `${data.pendientes.adelantos} adelanto(s) pendiente(s) de aprobación`, time: 'Pendiente' });
+  if (data.pendientes.permisos > 0)
+    alerts.push({ color: 'orange', text: `${data.pendientes.permisos} permiso(s) pendiente(s) de aprobación`, time: 'Pendiente' });
+
+  if (alerts.length === 0)
+    alerts.push({ color: 'green', text: 'Sin alertas activas — Todo en orden', time: 'Hoy' });
+
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-item">
+      <div class="alert-dot ${a.color}"></div>
+      <div class="alert-text">${a.text}</div>
+      <div class="alert-time">${a.time}</div>
+    </div>
+  `).join('');
+}
+
+// ── BARRA SEMANAL ─────────────────────────────────────────
+async function loadSemanal() {
+  const data = await apiFetch('/dashboard/asistencia/semanal');
+  const chart = document.getElementById('bar-chart');
+
+  const dias = data || [
+    {fecha:'Lun',presentes:0},{fecha:'Mar',presentes:0},
+    {fecha:'Mié',presentes:0},{fecha:'Jue',presentes:0},
+    {fecha:'Vie',presentes:0},{fecha:'Sáb',presentes:0},
+    {fecha:'Hoy',presentes:0}
+  ];
+
+  const max = Math.max(...dias.map(d => d.presentes), 1);
+
+  chart.innerHTML = dias.map((d, i) => {
+    const pct    = Math.round((d.presentes / max) * 100);
+    const isToday = i === dias.length - 1;
+    const label  = d.fecha
+      ? new Date(d.fecha).toLocaleDateString('es-PE',{weekday:'short'}).slice(0,3).toUpperCase()
+      : d.fecha;
+    return `
+      <div class="bar-col">
+        <div class="bar-val">${d.presentes}</div>
+        <div class="bar ${isToday ? 'today' : 'past'}"
+             style="height:${Math.max(pct,3)}%"></div>
+        <div class="bar-label">${label}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── ASISTENCIA HOY ────────────────────────────────────────
+async function loadAsistenciaHoy() {
+  const data = await apiFetch('/tareos/hoy');
+  const tbody = document.getElementById('tabla-asistencia');
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4"
+      style="text-align:center;padding:24px;color:var(--text-muted);font-size:11px;">
+      Sin registros hoy
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(a => {
+    const estadoBadge = {
+      asistio:  '<span class="badge green">Presente</span>',
+      dobla:    '<span class="badge orange">Dobla</span>',
+      permiso:  '<span class="badge blue">Permiso</span>',
+      falta:    '<span class="badge red">Falta</span>',
+      descanso: '<span class="badge yellow">Descanso</span>',
+    }[a.estado] || a.estado;
+
+    const hora = a.hora_entrada
+      ? `<span style="font-family:'JetBrains Mono',monospace;font-size:11px">${a.hora_entrada.slice(0,5)}</span>`
+      : '—';
+
+    return `<tr>
+      <td>Trabajador #${a.trabajador_id}</td>
+      <td>—</td>
+      <td>${hora}</td>
+      <td>${estadoBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── MOCK DATA (cuando API no responde) ────────────────────
+function useMockData() {
+  document.getElementById('stat-presentes').textContent = '24';
+  document.getElementById('stat-total').textContent     = '30';
+  document.getElementById('stat-doblas').textContent    = '3';
+  document.getElementById('stat-ausentes').textContent  = '3';
+  document.getElementById('stat-alertas').textContent   = '5';
+  document.getElementById('m-critico').textContent      = '2';
+  document.getElementById('m-herram').textContent       = '4';
+  document.getElementById('m-epp').textContent          = '3';
+  document.getElementById('m-epp-v').textContent        = '0';
+  document.getElementById('m-docs').textContent         = '1';
+
+  const mockAlerts = [
+    { color: 'yellow', text: '1 documento por vencer en 30 días', time: '28 días' },
+    { color: 'orange', text: '2 adelantos pendientes de aprobación', time: 'Pendiente' },
+    { color: 'orange', text: '3 EPPs por vencer en 15 días', time: 'Próx.' },
+  ];
+  document.getElementById('alert-list').innerHTML =
+    mockAlerts.map(a => `
+      <div class="alert-item">
+        <div class="alert-dot ${a.color}"></div>
+        <div class="alert-text">${a.text}</div>
+        <div class="alert-time">${a.time}</div>
+      </div>
+    `).join('');
+
+  const mockBars = [
+    {d:'LUN',v:22},{d:'MAR',v:25},{d:'MIÉ',v:23},
+    {d:'JUE',v:26},{d:'VIE',v:24},{d:'SÁB',v:18},{d:'HOY',v:24}
+  ];
+  const max = 30;
+  document.getElementById('bar-chart').innerHTML =
+    mockBars.map((b, i) => `
+      <div class="bar-col">
+        <div class="bar-val">${b.v}</div>
+        <div class="bar ${i===6?'today':'past'}"
+             style="height:${Math.round(b.v/max*100)}%"></div>
+        <div class="bar-label">${b.d}</div>
+      </div>
+    `).join('');
+
+  document.getElementById('tabla-asistencia').innerHTML = `
+    <tr><td>Juan C. Quispe</td><td>Perforista</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px">06:42</span></td>
+      <td><span class="badge green">Presente</span></td></tr>
+    <tr><td>Carlos R. Medina</td><td>Ayudante</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px">06:38</span></td>
+      <td><span class="badge green">Presente</span></td></tr>
+    <tr><td>Rosa L. Torres</td><td>Supervisora</td>
+      <td>—</td>
+      <td><span class="badge blue">Permiso</span></td></tr>
+    <tr><td>Pedro A. García</td><td>Perforista</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;font-size:11px">06:55</span></td>
+      <td><span class="badge orange">Dobla</span></td></tr>
+  `;
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  await Promise.all([
+    loadResumen(),
+    loadSemanal(),
+    loadAsistenciaHoy(),
+  ]);
+}
+
+init();
+setInterval(init, 60000); // refresca cada minuto
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+
+<script>
+// ── AJUSTES DASHBOARD POR ROL ─────────────────────────────
+(function(){
+  const rol = localStorage.getItem('rol') || '';
+  if(rol !== 'operario') return;
+
+  function ajustar(){
+    // Ocultar panel Pendientes completo
+    const pendList = document.getElementById('pendientes-list');
+    if(pendList) pendList.closest('.panel').style.display = 'none';
+
+    // Ocultar panel Almacén completo
+    const almacenStats = document.getElementById('almacen-stats');
+    if(almacenStats) almacenStats.closest('.panel').style.display = 'none';
+
+    // Ocultar botones no permitidos
+    document.querySelectorAll('.panel-action').forEach(el => {
+      if(el.textContent.includes('Registrar')) el.style.display = 'none';
+      if(el.textContent.includes('Ver todas')) el.style.display = 'none';
+    });
+
+    // Corregir "Trabajador #X" por nombre real
+    const tid = localStorage.getItem('trabajador_id');
+    const uname = localStorage.getItem('username');
+    document.querySelectorAll('td').forEach(td => {
+      if(td.textContent.trim() === 'Trabajador #' + tid){
+        td.textContent = uname;
+      }
+    });
+  }
+
+  setTimeout(ajustar, 800);
+})();
+</script>
+</body>
+</html>

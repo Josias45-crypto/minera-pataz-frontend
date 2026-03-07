@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planilla — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:    #0a0a0a;
+    --bg-panel:   #111111;
+    --bg-card:    #181818;
+    --bg-hover:   #1f1f1f;
+    --border:     #2a2a2a;
+    --border-bright: #3a3a3a;
+    --orange:     #f97316;
+    --orange-dim: #7c3a0e;
+    --orange-glow: rgba(249,115,22,0.15);
+    --text-primary:   #f0f0f0;
+    --text-secondary: #888888;
+    --text-muted:     #444444;
+    --green:      #22c55e;
+    --green-dim:  #14532d;
+    --red:        #ef4444;
+    --red-dim:    #7f1d1d;
+    --yellow:     #eab308;
+    --yellow-dim: #713f12;
+    --blue:       #3b82f6;
+    --blue-dim:   #1e3a8a;
+    --sidebar-w:  240px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg-base); color:var(--text-primary); font-family:'Barlow',sans-serif; min-height:100vh; display:flex; }
+
+  /* SIDEBAR */
+  .sidebar { width:var(--sidebar-w); background:var(--bg-panel); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; height:100vh; top:0; left:0; z-index:100; overflow-y:auto; }
+  .sidebar-logo { padding:20px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+  .logo-icon { width:36px; height:36px; background:var(--orange); border-radius:6px; display:flex; align-items:center; justify-content:center; }
+  .logo-icon svg { width:20px; height:20px; fill:#000; }
+  .logo-text .name { font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; }
+  .logo-text .sub { font-size:10px; color:var(--text-secondary); letter-spacing:0.08em; text-transform:uppercase; }
+  .sidebar-section { padding:8px 0; border-bottom:1px solid var(--border); }
+  .sidebar-label { font-size:9px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); padding:10px 16px 4px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 16px; cursor:pointer; transition:all 0.15s; border-left:2px solid transparent; text-decoration:none; color:var(--text-secondary); font-size:13px; font-weight:500; }
+  .nav-item:hover { background:var(--bg-hover); color:var(--text-primary); border-left-color:var(--border-bright); }
+  .nav-item.active { background:var(--orange-glow); color:var(--orange); border-left-color:var(--orange); }
+  .nav-item .icon { width:16px; height:16px; opacity:0.7; flex-shrink:0; }
+  .nav-item.active .icon { opacity:1; }
+  .sidebar-bottom { margin-top:auto; padding:12px; border-top:1px solid var(--border); }
+  .user-card { display:flex; align-items:center; gap:10px; padding:8px; border-radius:6px; background:var(--bg-card); border:1px solid var(--border); }
+  .user-avatar { width:30px; height:30px; background:var(--orange-dim); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--orange); font-family:'Barlow Condensed',sans-serif; }
+  .user-info .uname { font-size:12px; font-weight:600; }
+  .user-info .urole { font-size:10px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; }
+
+  /* MAIN */
+  .main { margin-left:var(--sidebar-w); flex:1; display:flex; flex-direction:column; }
+  .topbar { height:52px; background:var(--bg-panel); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:12px; position:sticky; top:0; z-index:50; }
+  .topbar-title { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; }
+  .content { padding:20px 24px; flex:1; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* SELECTOR MES */
+  .periodo-bar {
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg-card); border:1px solid var(--border);
+    border-radius:8px; padding:14px 18px; margin-bottom:16px;
+    animation:fadeUp 0.3s ease both;
+  }
+  .periodo-label { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); }
+  .periodo-selects { display:flex; gap:8px; }
+  .form-select { background:var(--bg-panel); border:1px solid var(--border); border-radius:5px; padding:7px 12px; color:var(--text-primary); font-size:13px; font-family:'Barlow',sans-serif; outline:none; cursor:pointer; transition:border-color 0.2s; }
+  .form-select:focus { border-color:var(--orange); }
+  .form-select option { background:var(--bg-card); }
+  .estado-badge { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+  .estado-badge.borrador { background:var(--yellow-dim); color:var(--yellow); }
+  .estado-badge.cerrada  { background:var(--green-dim);  color:var(--green); }
+  .estado-badge.nuevo    { background:var(--border);     color:var(--text-muted); }
+
+  .btn { display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; }
+  .btn svg { width:14px; height:14px; }
+  .btn-primary { background:var(--orange); color:#000; }
+  .btn-primary:hover { background:#fb923c; box-shadow:0 4px 14px rgba(249,115,22,0.3); }
+  .btn-ghost { background:var(--bg-card); color:var(--text-secondary); border:1px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--border-bright); color:var(--text-primary); }
+  .btn-danger { background:var(--red-dim); color:var(--red); border:1px solid var(--red-dim); }
+  .btn-danger:hover { border-color:var(--red); }
+  .btn-success { background:var(--green-dim); color:var(--green); border:1px solid var(--green-dim); }
+  .btn-success:hover { border-color:var(--green); }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .ml-auto { margin-left:auto; }
+
+  /* TOTALES */
+  .totales-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; animation:fadeUp 0.4s ease 0.1s both; }
+  .total-card { background:var(--bg-card); border:1px solid var(--border); border-radius:7px; padding:14px 16px; position:relative; overflow:hidden; }
+  .total-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .total-card.blue::before   { background:var(--blue); }
+  .total-card.orange::before { background:var(--orange); }
+  .total-card.red::before    { background:var(--red); }
+  .total-card.green::before  { background:var(--green); }
+  .total-lbl { font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+  .total-val { font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:900; line-height:1; }
+  .total-card.blue   .total-val { color:var(--blue); }
+  .total-card.orange .total-val { color:var(--orange); }
+  .total-card.red    .total-val { color:var(--red); }
+  .total-card.green  .total-val { color:var(--green); }
+  .total-sub { font-size:10px; color:var(--text-secondary); margin-top:3px; }
+
+  /* TABLA */
+  .panel { background:var(--bg-card); border:1px solid var(--border); border-radius:8px; overflow:hidden; animation:fadeUp 0.5s ease 0.2s both; }
+  .panel-header { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--bg-panel); }
+  .panel-title { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  thead tr { border-bottom:1px solid var(--border); background:var(--bg-panel); }
+  thead th { padding:9px 12px; text-align:left; font-size:9px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted); white-space:nowrap; }
+  thead th.num { text-align:right; }
+  tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; cursor:pointer; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--bg-hover); }
+  tbody tr.alert-row { background:rgba(239,68,68,0.04); }
+  tbody td { padding:10px 12px; color:var(--text-secondary); }
+  tbody td.num { text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  tbody td:first-child { color:var(--text-primary); font-weight:600; }
+  tfoot tr { border-top:2px solid var(--border-bright); background:var(--bg-panel); }
+  tfoot td { padding:10px 12px; font-weight:700; font-family:'JetBrains Mono',monospace; font-size:12px; }
+  tfoot td.num { text-align:right; }
+
+  .mono { font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .badge { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:3px; font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; font-family:'JetBrains Mono',monospace; }
+  .badge.green  { background:var(--green-dim);  color:var(--green); }
+  .badge.red    { background:var(--red-dim);    color:var(--red); }
+  .badge.orange { background:var(--orange-dim); color:var(--orange); }
+  .badge.yellow { background:var(--yellow-dim); color:var(--yellow); }
+  .badge.blue   { background:var(--blue-dim);   color:var(--blue); }
+
+  .avatar-cell { display:flex; align-items:center; gap:8px; }
+  .avatar { width:28px; height:28px; border-radius:5px; background:var(--bg-panel); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:800; color:var(--orange); flex-shrink:0; }
+
+  /* BOLETA MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:200; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(4px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--bg-panel); border:1px solid var(--border); border-radius:10px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+  .modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:var(--bg-panel); z-index:1; }
+  .modal-title { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+  .modal-close { width:28px; height:28px; border-radius:4px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+  .modal-close:hover { border-color:var(--red); color:var(--red); }
+  .modal-body { padding:20px; }
+  .modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; position:sticky; bottom:0; background:var(--bg-panel); }
+
+  /* BOLETA */
+  .boleta-header { text-align:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); }
+  .boleta-empresa { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:900; text-transform:uppercase; letter-spacing:0.05em; color:var(--orange); }
+  .boleta-titulo { font-size:12px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.1em; margin-top:2px; }
+  .boleta-periodo { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); margin-top:6px; }
+
+  .boleta-worker { display:flex; align-items:center; gap:12px; background:var(--bg-card); border:1px solid var(--border); border-radius:7px; padding:12px; margin-bottom:16px; }
+  .boleta-avatar { width:44px; height:44px; border-radius:8px; background:var(--orange-dim); display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:900; color:var(--orange); }
+  .boleta-name { font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:800; text-transform:uppercase; }
+  .boleta-info { font-size:11px; color:var(--text-secondary); margin-top:2px; }
+
+  .boleta-section { margin-bottom:14px; }
+  .boleta-section-title { font-size:9px; font-weight:700; letter-spacing:0.15em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+  .boleta-row { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid var(--border); }
+  .boleta-row:last-child { border-bottom:none; }
+  .boleta-row .bk { font-size:12px; color:var(--text-secondary); }
+  .boleta-row .bv { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-primary); font-weight:700; }
+  .boleta-row .bv.pos { color:var(--green); }
+  .boleta-row .bv.neg { color:var(--red); }
+
+  .boleta-neto { background:var(--bg-card); border:1px solid var(--orange-dim); border-radius:7px; padding:16px; text-align:center; margin-top:16px; }
+  .boleta-neto-label { font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-secondary); margin-bottom:4px; }
+  .boleta-neto-val { font-family:'Barlow Condensed',sans-serif; font-size:40px; font-weight:900; color:var(--green); line-height:1; }
+  .boleta-neto-val.negativo { color:var(--red); }
+
+  /* EMPTY */
+  .empty-state { text-align:center; padding:60px 20px; color:var(--text-muted); }
+  .empty-state svg { width:40px; height:40px; margin-bottom:12px; opacity:0.3; }
+  .empty-state p { font-size:13px; margin-bottom:16px; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px 16px; display:flex; align-items:center; gap:10px; font-size:13px; z-index:999; animation:toastIn 0.3s ease; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
+  @keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .toast.success { border-color:var(--green); }
+  .toast.error   { border-color:var(--red); }
+  .toast-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .toast.success .toast-dot { background:var(--green); }
+  .toast.error   .toast-dot { background:var(--red); }
+
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border-bright); border-radius:2px; }
+</style>
+</head>
+
+<body data-modulo="planilla">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores
+    </a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tareos
+    </a>
+    <a class="nav-item" href="legajo.html" data-modulo="legajo">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Legajo
+    </a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Permisos
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén
+    </a>
+    <a class="nav-item" href="epps.html" data-modulo="epps">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Adelantos
+    </a>
+    <a class="nav-item active" href="planilla.html" data-modulo="planilla">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla
+    </a>
+  </div>
+    <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>Configuración
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">AD</div>
+      <div class="user-info"><div class="uname" id="nav-user">admin</div><div class="urole" id="nav-rol">Administrador</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Planilla y Pagos</div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="exportarCSV()" id="btn-exportar" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+      <button class="btn btn-success" onclick="calcularPlanilla()" id="btn-calcular">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Calcular
+      </button>
+      <button class="btn btn-danger" onclick="confirmarCierre()" id="btn-cerrar" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Cerrar Planilla
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PERIODO -->
+    <div class="periodo-bar">
+      <span class="periodo-label">Período:</span>
+      <div class="periodo-selects">
+        <select class="form-select" id="sel-mes" onchange="onPeriodoChange()">
+          <option value="1">Enero</option><option value="2">Febrero</option>
+          <option value="3" selected>Marzo</option><option value="4">Abril</option>
+          <option value="5">Mayo</option><option value="6">Junio</option>
+          <option value="7">Julio</option><option value="8">Agosto</option>
+          <option value="9">Setiembre</option><option value="10">Octubre</option>
+          <option value="11">Noviembre</option><option value="12">Diciembre</option>
+        </select>
+        <select class="form-select" id="sel-anio" onchange="onPeriodoChange()">
+          <option value="2026" selected>2026</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+      <div class="estado-badge nuevo" id="estado-planilla">Sin calcular</div>
+      <div style="margin-left:auto;font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace" id="fecha-cierre-info"></div>
+    </div>
+
+    <!-- TOTALES -->
+    <div class="totales-grid">
+      <div class="total-card blue">
+        <div class="total-lbl">Trabajadores</div>
+        <div class="total-val" id="t-workers">—</div>
+        <div class="total-sub">en planilla</div>
+      </div>
+      <div class="total-card orange">
+        <div class="total-lbl">Total bruto</div>
+        <div class="total-val" id="t-bruto">—</div>
+        <div class="total-sub">S/. antes de descuentos</div>
+      </div>
+      <div class="total-card red">
+        <div class="total-lbl">Total descuentos</div>
+        <div class="total-val" id="t-desc">—</div>
+        <div class="total-sub">AFP/ONP + adelantos + faltas</div>
+      </div>
+      <div class="total-card green">
+        <div class="total-lbl">Total neto</div>
+        <div class="total-val" id="t-neto">—</div>
+        <div class="total-sub">a pagar en planilla</div>
+      </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Detalle por trabajador</div>
+        <div style="font-size:11px;color:var(--text-muted)">Clic en fila para ver boleta</div>
+      </div>
+      <div id="tabla-container">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p>Selecciona un período y presiona <strong>Calcular</strong></p>
+          <button class="btn btn-primary" onclick="calcularPlanilla()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Calcular planilla
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL BOLETA -->
+<div class="modal-overlay" id="modal-boleta" onclick="if(event.target===this)closeBoleta()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Boleta de Pago</div>
+      <button class="modal-close" onclick="closeBoleta()">✕</button>
+    </div>
+    <div class="modal-body" id="boleta-body">—</div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeBoleta()">Cerrar</button>
+      <button class="btn btn-primary" onclick="imprimirBoleta()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+let detalles     = [];
+let trabajadores = [];
+let planillaId   = null;
+let planillaEstado = null;
+const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+
+async function init() {
+  const u = localStorage.getItem('username') || 'admin';
+  const r = localStorage.getItem('rol')      || 'admin';
+  document.getElementById('nav-user').textContent   = u;
+  document.getElementById('nav-rol').textContent    = r;
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+  await loadTrabajadores();
+  await loadPlanilla();
+}
+
+async function apiFetch(path, opts = {}) {
+  try {
+    const r = await fetch(API + path, {
+      headers: { 'Authorization':'Bearer '+TOKEN, 'Content-Type':'application/json', ...opts.headers },
+      ...opts
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || r.status); }
+    return await r.json();
+  } catch(e) { console.warn(path, e.message); return null; }
+}
+
+async function loadTrabajadores() {
+  const data = await apiFetch('/trabajadores/?activo=false');
+  trabajadores = data || [];
+}
+
+function getMes()  { return parseInt(document.getElementById('sel-mes').value); }
+function getAnio() { return parseInt(document.getElementById('sel-anio').value); }
+
+async function onPeriodoChange() {
+  detalles = [];
+  planillaId = null;
+  planillaEstado = null;
+  document.getElementById('tabla-container').innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p>Presiona <strong>Calcular</strong> para generar la planilla</p>
+      <button class="btn btn-primary" onclick="calcularPlanilla()">Calcular planilla</button>
+    </div>`;
+  resetTotales();
+  document.getElementById('estado-planilla').className = 'estado-badge nuevo';
+  document.getElementById('estado-planilla').textContent = 'Sin calcular';
+  document.getElementById('fecha-cierre-info').textContent = '';
+  document.getElementById('btn-cerrar').disabled = true;
+  document.getElementById('btn-exportar').disabled = true;
+  await loadPlanilla();
+}
+
+async function loadPlanilla() {
+  const mes  = getMes();
+  const anio = getAnio();
+  const data = await apiFetch(`/planilla/detalle?mes=${mes}&anio=${anio}`);
+  if (data && data.length > 0) {
+    detalles = data;
+    renderTabla();
+    updateTotales();
+    // Obtener estado
+    const hist = await apiFetch('/planilla/historial');
+    if (hist) {
+      const p = hist.find(x => x.mes === mes && x.anio === anio);
+      if (p) {
+        planillaId     = p.id;
+        planillaEstado = p.estado;
+        updateEstadoBadge(p);
+      }
+    }
+  }
+}
+
+async function calcularPlanilla() {
+  const mes  = getMes();
+  const anio = getAnio();
+  document.getElementById('btn-calcular').disabled = true;
+  document.getElementById('btn-calcular').textContent = 'Calculando...';
+
+  const r = await apiFetch(`/planilla/calcular?mes=${mes}&anio=${anio}`, { method:'POST' });
+
+  document.getElementById('btn-calcular').disabled = false;
+  document.getElementById('btn-calcular').textContent = 'Calcular';
+
+  if (r) {
+    planillaId     = r.id;
+    planillaEstado = r.estado;
+    showToast('Planilla calculada correctamente', 'success');
+    updateEstadoBadge(r);
+    await loadPlanilla();
+  } else {
+    showToast('Error al calcular la planilla', 'error');
+  }
+}
+
+function updateEstadoBadge(p) {
+  const badge = document.getElementById('estado-planilla');
+  if (p.estado === 'cerrada') {
+    badge.className = 'estado-badge cerrada';
+    badge.textContent = 'Cerrada';
+    document.getElementById('btn-cerrar').disabled   = true;
+    document.getElementById('btn-calcular').disabled = true;
+    if (p.fecha_cierre)
+      document.getElementById('fecha-cierre-info').textContent =
+        'Cerrada: ' + new Date(p.fecha_cierre).toLocaleDateString('es-PE');
+  } else {
+    badge.className = 'estado-badge borrador';
+    badge.textContent = 'Borrador';
+    document.getElementById('btn-cerrar').disabled   = false;
+    document.getElementById('btn-calcular').disabled = false;
+  }
+  document.getElementById('btn-exportar').disabled = false;
+}
+
+function renderTabla() {
+  if (!detalles.length) return;
+
+  let rows = detalles.map(d => {
+    const t   = trabajadores.find(x => x.id === d.trabajador_id);
+    const nom = t ? `${t.apellidos}, ${t.nombres}` : `Trabajador #${d.trabajador_id}`;
+    const ini = t ? (t.nombres.charAt(0) + t.apellidos.charAt(0)).toUpperCase() : '??';
+    const isAlert = d.sueldo_neto < 0;
+
+    return `<tr class="${isAlert ? 'alert-row' : ''}" onclick="verBoleta(${d.trabajador_id})">
+      <td>
+        <div class="avatar-cell">
+          <div class="avatar">${ini}</div>
+          <span>${nom}</span>
+        </div>
+      </td>
+      <td class="num">${d.dias_normales}</td>
+      <td class="num">${d.dias_dobla > 0 ? `<span style="color:var(--orange)">${d.dias_dobla}</span>` : '0'}</td>
+      <td class="num">${d.horas_extras_diurnas > 0 || d.horas_extras_nocturnas > 0
+          ? `<span style="color:var(--blue)">${(d.horas_extras_diurnas + d.horas_extras_nocturnas).toFixed(1)}h</span>`
+          : '—'}</td>
+      <td class="num">S/. ${parseFloat(d.sueldo_bruto).toFixed(2)}</td>
+      <td class="num" style="color:var(--red)">- S/. ${parseFloat(d.descuento_adelantos).toFixed(2)}</td>
+      <td class="num" style="color:var(--red)">- S/. ${parseFloat(d.descuento_pension).toFixed(2)}</td>
+      <td class="num" style="color:var(--red)">- S/. ${parseFloat(d.descuento_faltas).toFixed(2)}</td>
+      <td class="num">
+        <strong style="color:${d.sueldo_neto >= 0 ? 'var(--green)' : 'var(--red)'}">
+          S/. ${parseFloat(d.sueldo_neto).toFixed(2)}
+        </strong>
+      </td>
+      <td>
+        ${d.observaciones
+          ? `<span class="badge red" title="${d.observaciones}">⚠</span>`
+          : '<span class="badge green">OK</span>'}
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Totales pie de tabla
+  const totBruto = detalles.reduce((s,d) => s + parseFloat(d.sueldo_bruto),0);
+  const totDesc  = detalles.reduce((s,d) => s + parseFloat(d.total_descuentos),0);
+  const totNeto  = detalles.reduce((s,d) => s + parseFloat(d.sueldo_neto),0);
+
+  document.getElementById('tabla-container').innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Trabajador</th>
+            <th class="num">D. Normal</th>
+            <th class="num">D. Dobla</th>
+            <th class="num">H. Extra</th>
+            <th class="num">Bruto</th>
+            <th class="num">Adelantos</th>
+            <th class="num">AFP/ONP</th>
+            <th class="num">Faltas</th>
+            <th class="num">Neto</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="color:var(--text-secondary);font-size:11px">
+              TOTALES — ${detalles.length} trabajador(es)
+            </td>
+            <td class="num">S/. ${totBruto.toFixed(2)}</td>
+            <td class="num" style="color:var(--red)">- S/. ${detalles.reduce((s,d)=>s+parseFloat(d.descuento_adelantos),0).toFixed(2)}</td>
+            <td class="num" style="color:var(--red)">- S/. ${detalles.reduce((s,d)=>s+parseFloat(d.descuento_pension),0).toFixed(2)}</td>
+            <td class="num" style="color:var(--red)">- S/. ${detalles.reduce((s,d)=>s+parseFloat(d.descuento_faltas),0).toFixed(2)}</td>
+            <td class="num" style="color:${totNeto>=0?'var(--green)':'var(--red)'}">
+              S/. ${totNeto.toFixed(2)}
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>`;
+}
+
+function updateTotales() {
+  const bruto = detalles.reduce((s,d) => s + parseFloat(d.sueldo_bruto), 0);
+  const desc  = detalles.reduce((s,d) => s + parseFloat(d.total_descuentos), 0);
+  const neto  = detalles.reduce((s,d) => s + parseFloat(d.sueldo_neto), 0);
+  document.getElementById('t-workers').textContent = detalles.length;
+  document.getElementById('t-bruto').textContent   = `${bruto.toFixed(0)}`;
+  document.getElementById('t-desc').textContent    = `${desc.toFixed(0)}`;
+  document.getElementById('t-neto').textContent    = `${neto.toFixed(0)}`;
+}
+
+function resetTotales() {
+  ['t-workers','t-bruto','t-desc','t-neto'].forEach(id =>
+    document.getElementById(id).textContent = '—'
+  );
+}
+
+// ── BOLETA ────────────────────────────────────────────────
+async function verBoleta(trabajadorId) {
+  const mes  = getMes();
+  const anio = getAnio();
+  const data = await apiFetch(`/planilla/boleta/${trabajadorId}?mes=${mes}&anio=${anio}`);
+
+  if (!data) {
+    // Usar datos locales
+    const d = detalles.find(x => x.trabajador_id === trabajadorId);
+    const t = trabajadores.find(x => x.id === trabajadorId);
+    if (!d || !t) { showToast('No se pudo cargar la boleta', 'error'); return; }
+    renderBoleta({
+      trabajador: { id:t.id, nombres:t.nombres, apellidos:t.apellidos, dni:t.dni, cargo:'—', area:'—' },
+      periodo: { mes, anio },
+      ingresos: {
+        dias_normales: d.dias_normales, sueldo_dias_normales: parseFloat(d.sueldo_dias_normales),
+        dias_dobla: d.dias_dobla, sueldo_dias_dobla: parseFloat(d.sueldo_dias_dobla),
+        horas_extras: parseFloat(d.sueldo_horas_extras), sueldo_bruto: parseFloat(d.sueldo_bruto)
+      },
+      descuentos: {
+        adelantos: parseFloat(d.descuento_adelantos), faltas: parseFloat(d.descuento_faltas),
+        pension: parseFloat(d.descuento_pension), sistema: t.sistema_pension || 'AFP',
+        total: parseFloat(d.total_descuentos)
+      },
+      neto_a_pagar: parseFloat(d.sueldo_neto),
+      observaciones: d.observaciones
+    });
+  } else {
+    renderBoleta(data);
+  }
+  document.getElementById('modal-boleta').classList.add('open');
+}
+
+function renderBoleta(data) {
+  const { trabajador, periodo, ingresos, descuentos, neto_a_pagar, observaciones } = data;
+  const ini = (trabajador.nombres.charAt(0) + trabajador.apellidos.charAt(0)).toUpperCase();
+  const esNegativo = neto_a_pagar < 0;
+
+  document.getElementById('boleta-body').innerHTML = `
+    <div class="boleta-header">
+      <div class="boleta-empresa">Minera Pataz SAC</div>
+      <div class="boleta-titulo">Boleta de Pago</div>
+      <div class="boleta-periodo">${meses[periodo.mes]} ${periodo.anio}</div>
+    </div>
+
+    <div class="boleta-worker">
+      <div class="boleta-avatar">${ini}</div>
+      <div>
+        <div class="boleta-name">${trabajador.apellidos}, ${trabajador.nombres}</div>
+        <div class="boleta-info">DNI: ${trabajador.dni} • ${trabajador.cargo} • ${trabajador.area}</div>
+      </div>
+    </div>
+
+    <div class="boleta-section">
+      <div class="boleta-section-title">Ingresos</div>
+      <div class="boleta-row">
+        <span class="bk">Días normales (${ingresos.dias_normales} días)</span>
+        <span class="bv pos">S/. ${ingresos.sueldo_dias_normales.toFixed(2)}</span>
+      </div>
+      ${ingresos.dias_dobla > 0 ? `
+      <div class="boleta-row">
+        <span class="bk">Días dobla (${ingresos.dias_dobla} días × 2)</span>
+        <span class="bv pos" style="color:var(--orange)">S/. ${ingresos.sueldo_dias_dobla.toFixed(2)}</span>
+      </div>` : ''}
+      ${ingresos.horas_extras > 0 ? `
+      <div class="boleta-row">
+        <span class="bk">Horas extras</span>
+        <span class="bv pos">S/. ${ingresos.horas_extras.toFixed(2)}</span>
+      </div>` : ''}
+      <div class="boleta-row" style="border-top:1px solid var(--border-bright);margin-top:4px;padding-top:8px">
+        <span class="bk" style="font-weight:700;color:var(--text-primary)">Sueldo Bruto</span>
+        <span class="bv pos" style="font-size:14px">S/. ${ingresos.sueldo_bruto.toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div class="boleta-section">
+      <div class="boleta-section-title">Descuentos</div>
+      ${descuentos.adelantos > 0 ? `
+      <div class="boleta-row">
+        <span class="bk">Adelantos de sueldo</span>
+        <span class="bv neg">- S/. ${descuentos.adelantos.toFixed(2)}</span>
+      </div>` : ''}
+      ${descuentos.faltas > 0 ? `
+      <div class="boleta-row">
+        <span class="bk">Descuento por faltas</span>
+        <span class="bv neg">- S/. ${descuentos.faltas.toFixed(2)}</span>
+      </div>` : ''}
+      <div class="boleta-row">
+        <span class="bk">${descuentos.sistema} (${descuentos.sistema === 'AFP' ? '10' : '13'}%)</span>
+        <span class="bv neg">- S/. ${descuentos.pension.toFixed(2)}</span>
+      </div>
+      <div class="boleta-row" style="border-top:1px solid var(--border-bright);margin-top:4px;padding-top:8px">
+        <span class="bk" style="font-weight:700;color:var(--text-primary)">Total Descuentos</span>
+        <span class="bv neg" style="font-size:14px">- S/. ${descuentos.total.toFixed(2)}</span>
+      </div>
+    </div>
+
+    <div class="boleta-neto">
+      <div class="boleta-neto-label">Neto a pagar</div>
+      <div class="boleta-neto-val ${esNegativo ? 'negativo' : ''}">
+        S/. ${Math.abs(neto_a_pagar).toFixed(2)}
+        ${esNegativo ? '<br><span style="font-size:14px;color:var(--red)">⚠ NETO NEGATIVO</span>' : ''}
+      </div>
+    </div>
+
+    ${observaciones ? `
+    <div style="margin-top:12px;padding:10px;background:var(--red-dim);border:1px solid var(--red);border-radius:6px;font-size:11px;color:var(--red)">
+      ${observaciones}
+    </div>` : ''}
+  `;
+}
+
+function closeBoleta() {
+  document.getElementById('modal-boleta').classList.remove('open');
+}
+
+function imprimirBoleta() {
+  window.print();
+}
+
+// ── CIERRE ────────────────────────────────────────────────
+async function confirmarCierre() {
+  const negativos = detalles.filter(d => d.sueldo_neto < 0);
+  if (negativos.length > 0) {
+    showToast(`${negativos.length} trabajador(es) con neto negativo. Revisa antes de cerrar.`, 'error');
+    return;
+  }
+  if (!confirm(`¿Cerrar la planilla de ${meses[getMes()]} ${getAnio()}?\n\nEsta acción es IRREVERSIBLE.`)) return;
+
+  const r = await apiFetch(`/planilla/cerrar?mes=${getMes()}&anio=${getAnio()}`, { method:'POST' });
+  if (r) {
+    showToast('Planilla cerrada y bloqueada', 'success');
+    updateEstadoBadge(r);
+  } else {
+    showToast('Error al cerrar la planilla', 'error');
+  }
+}
+
+// ── EXPORTAR CSV ──────────────────────────────────────────
+function exportarCSV() {
+  if (!detalles.length) return;
+  const rows = [
+    ['Trabajador','DNI','D.Normal','D.Dobla','H.Extra','Bruto','Adelantos','AFP/ONP','Faltas','Neto'],
+    ...detalles.map(d => {
+      const t = trabajadores.find(x => x.id === d.trabajador_id);
+      return [
+        t ? `${t.apellidos} ${t.nombres}` : d.trabajador_id,
+        t ? t.dni : '—',
+        d.dias_normales, d.dias_dobla,
+        parseFloat(d.horas_extras_diurnas) + parseFloat(d.horas_extras_nocturnas),
+        d.sueldo_bruto, d.descuento_adelantos, d.descuento_pension,
+        d.descuento_faltas, d.sueldo_neto
+      ];
+    })
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a   = document.createElement('a');
+  a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `planilla_${meses[getMes()]}_${getAnio()}.csv`;
+  a.click();
+  showToast('Planilla exportada', 'success');
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeBoleta();
+});
+
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>

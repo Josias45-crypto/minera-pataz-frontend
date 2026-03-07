@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Almacén — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:#0a0a0a;--bg-panel:#111111;--bg-card:#181818;--bg-hover:#1f1f1f;
+    --border:#2a2a2a;--border-bright:#3a3a3a;
+    --orange:#f97316;--orange-dim:#7c3a0e;--orange-glow:rgba(249,115,22,0.15);
+    --text-primary:#f0f0f0;--text-secondary:#888888;--text-muted:#444444;
+    --green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;
+    --yellow:#eab308;--yellow-dim:#713f12;--blue:#3b82f6;--blue-dim:#1e3a8a;
+    --sidebar-w:240px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+
+  .sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:20px;height:20px;fill:#000;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;}
+  .logo-text .sub{font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;}
+  .sidebar-section{padding:8px 0;border-bottom:1px solid var(--border);}
+  .sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;}
+  .nav-item:hover{background:var(--bg-hover);color:var(--text-primary);border-left-color:var(--border-bright);}
+  .nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+  .nav-item .icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);}
+  .user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;}
+  .user-info .uname{font-size:12px;font-weight:600;}
+  .user-info .urole{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;}
+
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{height:52px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;}
+  .content{padding:20px 24px;flex:1;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* TABS PRINCIPALES */
+  .main-tabs{display:flex;gap:2px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:16px;animation:fadeUp 0.3s ease both;}
+  .main-tab{flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;}
+  .main-tab.active{background:var(--bg-panel);color:var(--orange);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+  .tab-view{display:none;}
+  .tab-view.active{display:block;}
+
+  /* STATS */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;animation:fadeUp 0.4s ease 0.1s both;}
+  .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:7px;padding:12px 14px;position:relative;overflow:hidden;}
+  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat.green::before{background:var(--green)}.stat.orange::before{background:var(--orange)}.stat.red::before{background:var(--red)}.stat.blue::before{background:var(--blue)}
+  .stat-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px;}
+  .stat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;line-height:1;}
+  .stat.green .stat-val{color:var(--green)}.stat.orange .stat-val{color:var(--orange)}.stat.red .stat-val{color:var(--red)}.stat.blue .stat-val{color:var(--blue)}
+  .stat-sub{font-size:10px;color:var(--text-secondary);margin-top:3px;}
+
+  /* TOOLBAR */
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .search-wrap{position:relative;flex:1;max-width:300px;}
+  .search-input{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:8px 32px 8px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .search-input:focus{border-color:var(--orange);}
+  .search-input::placeholder{color:var(--text-muted);}
+  .search-icon{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+  .search-icon svg{width:13px;height:13px;}
+  .filter-select{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text-secondary);font-size:12px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;transition:border-color 0.2s;}
+  .filter-select:focus{border-color:var(--orange);color:var(--text-primary);}
+  .btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
+  .btn svg{width:14px;height:14px;}
+  .btn-primary{background:var(--orange);color:#000;}
+  .btn-primary:hover{background:#fb923c;box-shadow:0 4px 14px rgba(249,115,22,0.3);}
+  .btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--border-bright);color:var(--text-primary);}
+  .btn-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim);}
+  .btn-green:hover{border-color:var(--green);}
+  .btn-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);}
+  .btn-red:hover{border-color:var(--red);}
+  .ml-auto{margin-left:auto;}
+
+  /* PANEL + TABLA */
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;animation:fadeUp 0.4s ease 0.2s both;}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg-panel);}
+  .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead tr{border-bottom:1px solid var(--border);background:var(--bg-panel);}
+  thead th{padding:9px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;cursor:pointer;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--bg-hover);}
+  tbody tr.critico{background:rgba(239,68,68,0.04);}
+  tbody td{padding:10px 12px;color:var(--text-secondary);}
+  tbody td:first-child{color:var(--text-primary);font-weight:600;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+  .badge.green{background:var(--green-dim);color:var(--green)}.badge.red{background:var(--red-dim);color:var(--red)}.badge.orange{background:var(--orange-dim);color:var(--orange)}.badge.yellow{background:var(--yellow-dim);color:var(--yellow)}.badge.blue{background:var(--blue-dim);color:var(--blue)}
+  .row-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;}
+  tbody tr:hover .row-actions{opacity:1;}
+  .action-btn{padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:'Barlow Condensed',sans-serif;transition:all 0.15s;}
+  .action-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .action-btn.green:hover{border-color:var(--green);color:var(--green);}
+  .action-btn.red:hover{border-color:var(--red);color:var(--red);}
+
+  /* STOCK BAR */
+  .stock-bar-wrap{display:flex;align-items:center;gap:8px;}
+  .stock-bar{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;min-width:60px;}
+  .stock-fill{height:100%;border-radius:3px;transition:width 0.5s ease;}
+  .stock-num{font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:1;}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;}
+  .modal-close{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .modal-close:hover{border-color:var(--red);color:var(--red);}
+  .modal-body{padding:20px;display:flex;flex-direction:column;gap:12px;}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-panel);}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;}
+  .form-input,.form-select{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .form-input:focus,.form-select:focus{border-color:var(--orange);}
+  .form-input::placeholder{color:var(--text-muted);}
+  .form-select option{background:var(--bg-card);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group.full{grid-column:1/-1;}
+  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--orange);padding-bottom:6px;border-bottom:1px solid var(--orange-dim);margin-top:4px;}
+
+  /* ALERTA STOCK */
+  .alerta-stock{background:var(--red-dim);border:1px solid var(--red);border-radius:6px;padding:10px 14px;font-size:12px;color:var(--red);display:none;}
+  .alerta-stock.show{display:block;}
+
+  /* HISTORIAL */
+  .historial-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+  .historial-item:last-child{border-bottom:none;}
+  .h-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+  .h-icon.entrada{background:var(--green-dim);color:var(--green);}
+  .h-icon.salida{background:var(--red-dim);color:var(--red);}
+  .h-info{flex:1;}
+  .h-material{font-size:12px;font-weight:600;color:var(--text-primary);}
+  .h-detail{font-size:10px;color:var(--text-secondary);margin-top:1px;}
+  .h-qty{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;}
+  .h-qty.entrada{color:var(--green);}
+  .h-qty.salida{color:var(--red);}
+  .h-time{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:999;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}.toast.warning{border-color:var(--yellow)}
+  .toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .toast.success .toast-dot{background:var(--green)}.toast.error .toast-dot{background:var(--red)}.toast.warning .toast-dot{background:var(--yellow)}
+</style>
+</head>
+
+<body data-modulo="almacen">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores
+    </a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Tareos
+    </a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Permisos
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item active" href="almacen.html" data-modulo="almacen">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén
+    </a>
+    <a class="nav-item" href="epps.html" data-modulo="epps">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Adelantos
+    </a>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla
+    </a>
+  </div>
+    <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>Configuración
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">AD</div>
+      <div class="user-info"><div class="uname" id="nav-user">admin</div><div class="urole" id="nav-rol">Administrador</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Control de Almacén</div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-green" onclick="openModal('entrada')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar Entrada
+      </button>
+      <button class="btn btn-red" onclick="openModal('salida')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar Salida
+      </button>
+      <button class="btn btn-ghost" onclick="openModal('material')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo Material
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat blue">
+        <div class="stat-lbl">Total materiales</div>
+        <div class="stat-val" id="s-total">—</div>
+        <div class="stat-sub">registrados activos</div>
+      </div>
+      <div class="stat green">
+        <div class="stat-lbl">Stock normal</div>
+        <div class="stat-val" id="s-normal">—</div>
+        <div class="stat-sub">sobre el mínimo</div>
+      </div>
+      <div class="stat red">
+        <div class="stat-lbl">Stock crítico</div>
+        <div class="stat-val" id="s-critico">—</div>
+        <div class="stat-sub">requieren reposición</div>
+      </div>
+      <div class="stat orange">
+        <div class="stat-lbl">Herram. prestadas</div>
+        <div class="stat-val" id="s-prestamos">—</div>
+        <div class="stat-sub">pendientes devolución</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchTab('materiales',this)">Materiales</button>
+      <button class="main-tab" onclick="switchTab('critico',this)">Stock Crítico</button>
+      <button class="main-tab" onclick="switchTab('prestamos',this)">Préstamos</button>
+      <button class="main-tab" onclick="switchTab('movimientos',this)">Movimientos</button>
+    </div>
+
+    <!-- TAB MATERIALES -->
+    <div class="tab-view active" id="tab-materiales">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <input type="text" class="search-input" placeholder="Buscar material..." id="search-mat" oninput="filterMat()">
+          <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        </div>
+        <select class="filter-select" id="filter-cat" onchange="filterMat()">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select class="filter-select" id="filter-tipo" onchange="filterMat()">
+          <option value="">Todos</option>
+          <option value="material">Materiales</option>
+          <option value="herramienta">Herramientas</option>
+        </select>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Categoría</th>
+                <th>Unidad</th>
+                <th>Stock actual</th>
+                <th>Stock mínimo</th>
+                <th>Nivel</th>
+                <th>Tipo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-mat">
+              <tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB CRÍTICO -->
+    <div class="tab-view" id="tab-critico">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Materiales con Stock Crítico</div>
+          <span style="font-size:11px;color:var(--red)">Requieren reposición inmediata</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Material</th><th>Stock actual</th><th>Stock mínimo</th><th>Déficit</th><th>Acción</th></tr>
+            </thead>
+            <tbody id="tbody-critico">
+              <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB PRÉSTAMOS -->
+    <div class="tab-view" id="tab-prestamos">
+      <div class="toolbar">
+        <div class="panel-title" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Herramientas Prestadas</div>
+        <button class="btn btn-ghost ml-auto" onclick="openModal('prestamo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo Préstamo
+        </button>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Herramienta</th><th>Trabajador</th><th>Fecha préstamo</th><th>Devolución esperada</th><th>Estado</th><th></th></tr>
+            </thead>
+            <tbody id="tbody-prestamos">
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB MOVIMIENTOS -->
+    <div class="tab-view" id="tab-movimientos">
+      <div class="toolbar">
+        <select class="filter-select" id="sel-mat-hist">
+          <option value="">Seleccionar material...</option>
+        </select>
+        <button class="btn btn-ghost" onclick="loadHistorial()">Ver historial</button>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Historial de movimientos</div>
+        </div>
+        <div style="padding:14px" id="historial-container">
+          <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px">
+            Selecciona un material para ver su historial
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODALES -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">—</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+let materiales   = [];
+let categorias   = [];
+let trabajadores = [];
+let prestamos    = [];
+let modalType    = '';
+
+async function init() {
+  const u = localStorage.getItem('username') || 'admin';
+  const r = localStorage.getItem('rol')      || 'admin';
+  document.getElementById('nav-user').textContent   = u;
+  document.getElementById('nav-rol').textContent    = r;
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+  await Promise.all([loadCategorias(), loadTrabajadores(), loadMateriales(), loadPrestamos()]);
+  loadStats();
+}
+
+async function apiFetch(path, opts = {}) {
+  try {
+    const r = await fetch(API + path, {
+      headers: {'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...opts.headers},
+      ...opts
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.detail || r.status); }
+    return await r.json();
+  } catch(e) { console.warn(path, e.message); return null; }
+}
+
+async function loadCategorias() {
+  const data = await apiFetch('/almacen/categorias');
+  categorias = data || [{id:1,nombre:'Herramientas'},{id:2,nombre:'Explosivos'},{id:3,nombre:'Consumibles'}];
+  const fc = document.getElementById('filter-cat');
+  categorias.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.nombre; fc.appendChild(o);
+  });
+}
+
+async function loadTrabajadores() {
+  const data = await apiFetch('/trabajadores/?activo=true');
+  trabajadores = data || [{id:1,nombres:'Juan Carlos',apellidos:'Quispe Mamani',fotocheck_codigo:'FC-001'}];
+}
+
+async function loadMateriales() {
+  const data = await apiFetch('/almacen/materiales');
+  materiales = data || [
+    {id:1,codigo:'MAT-001',nombre:'Barreno 4 pies',unidad_medida:'unidad',categoria_id:1,stock_actual:17,stock_minimo:5,es_herramienta:false,activo:true},
+    {id:2,codigo:'MAT-002',nombre:'Mecha lenta',unidad_medida:'metro',categoria_id:2,stock_actual:3,stock_minimo:10,es_herramienta:false,activo:true},
+    {id:3,codigo:'HER-001',nombre:'Martillo perforador',unidad_medida:'unidad',categoria_id:1,stock_actual:2,stock_minimo:1,es_herramienta:true,activo:true},
+  ];
+
+  // Llenar select historial
+  const sh = document.getElementById('sel-mat-hist');
+  sh.innerHTML = '<option value="">Seleccionar material...</option>';
+  materiales.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.id; o.textContent = m.nombre; sh.appendChild(o);
+  });
+
+  renderTablamat(materiales);
+  renderCritico();
+}
+
+async function loadPrestamos() {
+  const data = await apiFetch('/almacen/prestamos/pendientes');
+  prestamos = data || [];
+  renderPrestamos();
+}
+
+function loadStats() {
+  const total   = materiales.length;
+  const critico = materiales.filter(m => parseFloat(m.stock_actual) <= parseFloat(m.stock_minimo)).length;
+  document.getElementById('s-total').textContent    = total;
+  document.getElementById('s-normal').textContent   = total - critico;
+  document.getElementById('s-critico').textContent  = critico;
+  document.getElementById('s-prestamos').textContent = prestamos.length;
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── TABLA MATERIALES ──────────────────────────────────────
+function renderTablamat(data) {
+  const tbody = document.getElementById('tbody-mat');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Sin materiales</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(m => {
+    const cat = categorias.find(c => c.id === m.categoria_id);
+    const pct = m.stock_minimo > 0
+      ? Math.min(100, Math.round((parseFloat(m.stock_actual) / parseFloat(m.stock_minimo)) * 50))
+      : 100;
+    const isCrit = parseFloat(m.stock_actual) <= parseFloat(m.stock_minimo);
+    const color  = isCrit ? 'var(--red)' : parseFloat(m.stock_actual) <= parseFloat(m.stock_minimo) * 1.5 ? 'var(--yellow)' : 'var(--green)';
+
+    return `<tr class="${isCrit ? 'critico' : ''}">
+      <td><div style="display:flex;flex-direction:column"><span style="font-weight:600">${m.nombre}</span><span class="mono" style="color:var(--text-muted)">${m.codigo || '—'}</span></div></td>
+      <td>${cat ? cat.nombre : '—'}</td>
+      <td class="mono">${m.unidad_medida}</td>
+      <td><span class="mono" style="color:${color};font-weight:700">${parseFloat(m.stock_actual).toFixed(1)}</span></td>
+      <td><span class="mono">${parseFloat(m.stock_minimo).toFixed(1)}</span></td>
+      <td>
+        <div class="stock-bar-wrap">
+          <div class="stock-bar"><div class="stock-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+          ${isCrit ? '<span class="badge red">Crítico</span>' : '<span class="badge green">OK</span>'}
+        </div>
+      </td>
+      <td>${m.es_herramienta ? '<span class="badge blue">Herramienta</span>' : '<span class="badge yellow">Material</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn green" onclick="openModal('entrada',${m.id})">Entrada</button>
+          <button class="action-btn red"   onclick="openModal('salida',${m.id})">Salida</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterMat() {
+  const q    = document.getElementById('search-mat').value.toLowerCase();
+  const cat  = document.getElementById('filter-cat').value;
+  const tipo = document.getElementById('filter-tipo').value;
+  const filtered = materiales.filter(m => {
+    const matchQ   = !q   || m.nombre.toLowerCase().includes(q) || (m.codigo||'').toLowerCase().includes(q);
+    const matchCat = !cat || m.categoria_id == cat;
+    const matchTipo= !tipo|| (tipo==='herramienta' && m.es_herramienta) || (tipo==='material' && !m.es_herramienta);
+    return matchQ && matchCat && matchTipo;
+  });
+  renderTablamat(filtered);
+}
+
+// ── TABLA CRÍTICO ─────────────────────────────────────────
+function renderCritico() {
+  const criticos = materiales.filter(m => parseFloat(m.stock_actual) <= parseFloat(m.stock_minimo));
+  const tbody = document.getElementById('tbody-critico');
+  if (!criticos.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--green)">✓ Sin materiales en stock crítico</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = criticos.map(m => {
+    const deficit = parseFloat(m.stock_minimo) - parseFloat(m.stock_actual);
+    return `<tr class="critico">
+      <td>${m.nombre} <span class="mono" style="color:var(--text-muted)">${m.codigo||''}</span></td>
+      <td><span class="mono" style="color:var(--red);font-weight:700">${parseFloat(m.stock_actual).toFixed(1)} ${m.unidad_medida}</span></td>
+      <td><span class="mono">${parseFloat(m.stock_minimo).toFixed(1)} ${m.unidad_medida}</span></td>
+      <td><span class="mono" style="color:var(--red)">-${deficit.toFixed(1)} ${m.unidad_medida}</span></td>
+      <td><button class="action-btn green" onclick="openModal('entrada',${m.id})">Registrar entrada</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TABLA PRÉSTAMOS ───────────────────────────────────────
+function renderPrestamos() {
+  const tbody = document.getElementById('tbody-prestamos');
+  if (!prestamos.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted)">Sin préstamos pendientes</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = prestamos.map(p => {
+    const mat = materiales.find(m => m.id === p.material_id);
+    const trab = trabajadores.find(t => t.id === p.trabajador_id);
+    const hoy  = new Date();
+    const venc = new Date(p.fecha_devolucion_esperada);
+    const isVencido = venc < hoy;
+    return `<tr>
+      <td>${mat ? mat.nombre : `Material #${p.material_id}`}</td>
+      <td>${trab ? `${trab.apellidos}, ${trab.nombres}` : `Trabajador #${p.trabajador_id}`}</td>
+      <td class="mono">${p.fecha_prestamo ? new Date(p.fecha_prestamo).toLocaleDateString('es-PE') : '—'}</td>
+      <td class="mono" style="color:${isVencido ? 'var(--red)' : 'var(--text-secondary)'}">${p.fecha_devolucion_esperada}</td>
+      <td>${isVencido ? '<span class="badge red">Vencido</span>' : '<span class="badge yellow">Prestado</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn green" onclick="devolverPrestamo(${p.id})">Devolver</button>
+          <button class="action-btn red"   onclick="perderPrestamo(${p.id})">Perdido</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────
+async function loadHistorial() {
+  const mid = document.getElementById('sel-mat-hist').value;
+  if (!mid) { showToast('Selecciona un material', 'error'); return; }
+  const data = await apiFetch(`/almacen/materiales/${mid}/historial`);
+  const container = document.getElementById('historial-container');
+  if (!data || !data.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px">Sin movimientos registrados</div>';
+    return;
+  }
+  container.innerHTML = data.slice(0,20).map(mov => {
+    const mat   = materiales.find(m => m.id === mov.material_id);
+    const fecha = new Date(mov.fecha_hora).toLocaleString('es-PE');
+    return `<div class="historial-item">
+      <div class="h-icon ${mov.tipo}">${mov.tipo === 'entrada' ? '↑' : '↓'}</div>
+      <div class="h-info">
+        <div class="h-material">${mat ? mat.nombre : `Material #${mov.material_id}`}</div>
+        <div class="h-detail">${mov.proveedor || mov.motivo || '—'} ${mov.numero_guia ? '• Guía: '+mov.numero_guia : ''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="h-qty ${mov.tipo}">${mov.tipo === 'entrada' ? '+' : '-'}${parseFloat(mov.cantidad).toFixed(1)}</div>
+        <div class="h-time">${fecha}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODALES ───────────────────────────────────────────────
+function openModal(type, materialId = null) {
+  modalType = type;
+  const titles = {
+    entrada:  'Registrar Entrada',
+    salida:   'Registrar Salida',
+    material: 'Nuevo Material',
+    prestamo: 'Nuevo Préstamo de Herramienta',
+  };
+  document.getElementById('modal-title').textContent = titles[type] || type;
+
+  const body   = document.getElementById('modal-body');
+  const footer = document.getElementById('modal-footer');
+  const matOpts = materiales.map(m => `<option value="${m.id}" ${m.id == materialId ? 'selected' : ''}>${m.nombre} (Stock: ${parseFloat(m.stock_actual).toFixed(1)})</option>`).join('');
+  const trabOpts = trabajadores.map(t => `<option value="${t.fotocheck_codigo || t.id}">${t.apellidos}, ${t.nombres}</option>`).join('');
+
+  if (type === 'entrada') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Material *</label>
+        <select class="form-select" id="f-material"><option value="">Seleccionar...</option>${matOpts}</select></div>
+      <div class="form-group"><label class="form-label">Cantidad *</label>
+        <input type="number" class="form-input" id="f-cantidad" placeholder="0" step="0.01" min="0.01"></div>
+      <div class="form-group"><label class="form-label">Proveedor</label>
+        <input type="text" class="form-input" id="f-proveedor" placeholder="Nombre del proveedor"></div>
+      <div class="form-group"><label class="form-label">N° Guía de remisión</label>
+        <input type="text" class="form-input" id="f-guia" placeholder="GR-001"></div>
+      <div class="form-group"><label class="form-label">Motivo / Observación</label>
+        <input type="text" class="form-input" id="f-motivo" placeholder="Reposición de stock..."></div>`;
+    footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="guardarEntrada()">✓ Registrar Entrada</button>`;
+
+  } else if (type === 'salida') {
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Material *</label>
+        <select class="form-select" id="f-material"><option value="">Seleccionar...</option>${matOpts}</select></div>
+      <div class="form-group"><label class="form-label">Cantidad *</label>
+        <input type="number" class="form-input" id="f-cantidad" placeholder="0" step="0.01" min="0.01"></div>
+      <div class="form-group"><label class="form-label">Trabajador (fotocheck o DNI) *</label>
+        <input type="text" class="form-input" id="f-codigo-worker" placeholder="FC-001 o DNI"></div>
+      <div class="form-group"><label class="form-label">Motivo</label>
+        <input type="text" class="form-input" id="f-motivo" placeholder="Trabajo en frente norte..."></div>
+      <div class="alerta-stock" id="alerta-stock"></div>`;
+    footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="guardarSalida()">↓ Registrar Salida</button>`;
+
+  } else if (type === 'material') {
+    const catOpts = categorias.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+    body.innerHTML = `
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Código</label>
+          <input type="text" class="form-input" id="f-codigo" placeholder="MAT-001"></div>
+        <div class="form-group"><label class="form-label">Categoría *</label>
+          <select class="form-select" id="f-categoria"><option value="">Seleccionar...</option>${catOpts}</select></div>
+        <div class="form-group full"><label class="form-label">Nombre *</label>
+          <input type="text" class="form-input" id="f-nombre" placeholder="Nombre del material"></div>
+        <div class="form-group"><label class="form-label">Unidad de medida *</label>
+          <select class="form-select" id="f-unidad">
+            <option>unidad</option><option>metro</option><option>kg</option>
+            <option>litro</option><option>caja</option><option>rollo</option>
+          </select></div>
+        <div class="form-group"><label class="form-label">Stock mínimo</label>
+          <input type="number" class="form-input" id="f-stock-min" placeholder="5" value="0"></div>
+        <div class="form-group full"><label class="form-label">¿Es herramienta prestable?</label>
+          <select class="form-select" id="f-es-herramienta">
+            <option value="false">No — Material de consumo</option>
+            <option value="true">Sí — Se presta y devuelve</option>
+          </select></div>
+      </div>`;
+    footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMaterial()">Guardar material</button>`;
+
+  } else if (type === 'prestamo') {
+    const herramientas = materiales.filter(m => m.es_herramienta && parseFloat(m.stock_actual) >= 1);
+    const hOpts = herramientas.map(m => `<option value="${m.id}">${m.nombre} (Disp: ${m.stock_actual})</option>`).join('');
+    const mañana = new Date(); mañana.setDate(mañana.getDate() + 1);
+    body.innerHTML = `
+      <div class="form-group"><label class="form-label">Herramienta *</label>
+        <select class="form-select" id="f-herramienta"><option value="">Seleccionar...</option>${hOpts}</select></div>
+      <div class="form-group"><label class="form-label">Trabajador (fotocheck o DNI) *</label>
+        <input type="text" class="form-input" id="f-codigo-worker" placeholder="FC-001 o DNI"></div>
+      <div class="form-group"><label class="form-label">Fecha devolución esperada *</label>
+        <input type="date" class="form-input" id="f-fecha-dev" value="${mañana.toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Observación</label>
+        <input type="text" class="form-input" id="f-obs" placeholder="Estado de la herramienta..."></div>`;
+    footer.innerHTML = `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarPrestamo()">Registrar préstamo</button>`;
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+// ── GUARDAR ENTRADA ───────────────────────────────────────
+async function guardarEntrada() {
+  const mid  = document.getElementById('f-material').value;
+  const cant = parseFloat(document.getElementById('f-cantidad').value);
+  if (!mid || !cant || cant <= 0) { showToast('Material y cantidad son obligatorios', 'error'); return; }
+  const r = await apiFetch('/almacen/entrada', {
+    method:'POST',
+    body: JSON.stringify({
+      material_id:  parseInt(mid),
+      cantidad:     cant,
+      proveedor:    document.getElementById('f-proveedor').value || null,
+      numero_guia:  document.getElementById('f-guia').value    || null,
+      motivo:       document.getElementById('f-motivo').value  || null,
+    })
+  });
+  if (r) {
+    showToast(`Entrada registrada. Stock actualizado: ${r.stock_despues}`, 'success');
+    closeModal();
+    await loadMateriales();
+    loadStats();
+  } else {
+    showToast('Error al registrar entrada', 'error');
+  }
+}
+
+// ── GUARDAR SALIDA ────────────────────────────────────────
+async function guardarSalida() {
+  const mid    = document.getElementById('f-material').value;
+  const cant   = parseFloat(document.getElementById('f-cantidad').value);
+  const codigo = document.getElementById('f-codigo-worker').value.trim();
+  if (!mid || !cant || cant <= 0 || !codigo) { showToast('Completa todos los campos', 'error'); return; }
+
+  const r = await apiFetch('/almacen/salida', {
+    method:'POST',
+    body: JSON.stringify({
+      material_id:  parseInt(mid),
+      cantidad:     cant,
+      codigo_worker: codigo,
+      motivo:       document.getElementById('f-motivo').value || null,
+    })
+  });
+  if (r) {
+    const alerta = r.alerta_stock;
+    closeModal();
+    await loadMateriales();
+    loadStats();
+    if (alerta) showToast(alerta, 'warning');
+    else showToast('Salida registrada correctamente', 'success');
+  } else {
+    showToast('Error — Verifica stock disponible y código del trabajador', 'error');
+  }
+}
+
+// ── GUARDAR MATERIAL ──────────────────────────────────────
+async function guardarMaterial() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const catId  = document.getElementById('f-categoria').value;
+  const unidad = document.getElementById('f-unidad').value;
+  if (!nombre || !catId) { showToast('Nombre y categoría son obligatorios', 'error'); return; }
+  const r = await apiFetch('/almacen/materiales', {
+    method:'POST',
+    body: JSON.stringify({
+      codigo:         document.getElementById('f-codigo').value.trim() || null,
+      nombre, unidad_medida: unidad,
+      categoria_id:   parseInt(catId),
+      stock_minimo:   parseFloat(document.getElementById('f-stock-min').value) || 0,
+      es_herramienta: document.getElementById('f-es-herramienta').value === 'true',
+    })
+  });
+  if (r) {
+    showToast('Material creado correctamente', 'success');
+    closeModal();
+    await loadMateriales();
+    loadStats();
+  } else {
+    showToast('Error al crear material', 'error');
+  }
+}
+
+// ── GUARDAR PRÉSTAMO ──────────────────────────────────────
+async function guardarPrestamo() {
+  const hid    = document.getElementById('f-herramienta').value;
+  const codigo = document.getElementById('f-codigo-worker').value.trim();
+  const fecha  = document.getElementById('f-fecha-dev').value;
+  if (!hid || !codigo || !fecha) { showToast('Completa todos los campos', 'error'); return; }
+  const r = await apiFetch('/almacen/prestamos', {
+    method:'POST',
+    body: JSON.stringify({
+      material_id:               parseInt(hid),
+      codigo_worker:             codigo,
+      fecha_devolucion_esperada: fecha,
+      observacion:               document.getElementById('f-obs').value || null,
+    })
+  });
+  if (r) {
+    showToast('Préstamo registrado', 'success');
+    closeModal();
+    await loadMateriales();
+    await loadPrestamos();
+    loadStats();
+  } else {
+    showToast('Error — Verifica stock y código del trabajador', 'error');
+  }
+}
+
+// ── DEVOLVER ──────────────────────────────────────────────
+async function devolverPrestamo(id) {
+  if (!confirm('¿Confirmar devolución de la herramienta?')) return;
+  const r = await apiFetch(`/almacen/prestamos/${id}/devolver`, {
+    method:'PATCH', body:JSON.stringify({estado:'devuelto'})
+  });
+  if (r) {
+    showToast('Herramienta devuelta al stock', 'success');
+    await loadMateriales();
+    await loadPrestamos();
+    loadStats();
+  }
+}
+
+async function perderPrestamo(id) {
+  const motivo = prompt('Motivo o descripción de la pérdida:');
+  if (!motivo) return;
+  const r = await apiFetch(`/almacen/prestamos/${id}/devolver`, {
+    method:'PATCH', body:JSON.stringify({estado:'perdido', observacion:motivo})
+  });
+  if (r) {
+    showToast('Registrado como herramienta perdida', 'error');
+    await loadPrestamos();
+    loadStats();
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>

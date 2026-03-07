@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minera Pataz — Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:    #0a0a0a;
+    --bg-panel:   #111111;
+    --bg-card:    #181818;
+    --border:     #2a2a2a;
+    --border-bright: #3a3a3a;
+    --orange:     #f97316;
+    --orange-dim: #7c3a0e;
+    --orange-glow: rgba(249,115,22,0.2);
+    --text-primary:   #f0f0f0;
+    --text-secondary: #888888;
+    --text-muted:     #444444;
+    --green:  #22c55e;
+    --red:    #ef4444;
+    --red-dim: #7f1d1d;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── LADO IZQUIERDO — decorativo ───────────────────── */
+  .left-panel {
+    width: 55%;
+    position: relative;
+    overflow: hidden;
+    background: #0d0d0d;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 48px;
+  }
+
+  /* Grid de líneas de fondo */
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+  }
+
+  /* Gradiente naranja desde abajo */
+  .left-panel::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60%;
+    background: linear-gradient(
+      to top,
+      rgba(249,115,22,0.08) 0%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Número grande decorativo */
+  .deco-number {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 320px;
+    font-weight: 900;
+    color: var(--border);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Línea naranja diagonal */
+  .deco-line {
+    position: absolute;
+    top: 0; left: 140px;
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      var(--orange) 30%,
+      var(--orange) 70%,
+      transparent 100%
+    );
+    opacity: 0.3;
+  }
+
+  .left-content {
+    position: relative;
+    z-index: 2;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .left-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border: 1px solid var(--orange-dim);
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .left-tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .left-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .left-title .highlight {
+    color: var(--orange);
+    display: block;
+  }
+
+  .left-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 380px;
+    margin-bottom: 32px;
+  }
+
+  .left-stats {
+    display: flex;
+    gap: 32px;
+  }
+
+  .left-stat .num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .left-stat .lbl {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 2px;
+  }
+
+  /* Módulos en chips */
+  .modules-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+
+  .mod-chip {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+
+  .mod-chip.active {
+    border-color: var(--orange-dim);
+    color: var(--orange);
+    background: var(--orange-glow);
+  }
+
+  /* ── LADO DERECHO — formulario ─────────────────────── */
+  .right-panel {
+    width: 45%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    position: relative;
+  }
+
+  .login-box {
+    width: 100%;
+    max-width: 360px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .login-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .login-logo-icon {
+    width: 44px; height: 44px;
+    background: var(--orange);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .login-logo-icon svg {
+    width: 24px; height: 24px;
+    fill: #000;
+  }
+
+  .login-logo-text .name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .login-logo-text .sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .login-heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+  }
+
+  /* ── FORM ──────────────────────────────────────────── */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .form-input-wrap {
+    position: relative;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 11px 40px 11px 14px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Barlow', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .form-input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px var(--orange-glow);
+  }
+
+  .form-input.error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+  }
+
+  .form-input::placeholder { color: var(--text-muted); }
+
+  .input-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.15s;
+    display: flex;
+  }
+
+  .input-icon:hover { color: var(--text-secondary); }
+  .input-icon svg { width: 16px; height: 16px; }
+
+  /* ── ERROR MSG ─────────────────────────────────────── */
+  .error-msg {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 16px;
+    animation: shake 0.4s ease;
+  }
+
+  .error-msg.show { display: flex; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-6px); }
+    40%       { transform: translateX(6px); }
+    60%       { transform: translateX(-4px); }
+    80%       { transform: translateX(4px); }
+  }
+
+  /* ── INTENTOS ──────────────────────────────────────── */
+  .attempts-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .attempt-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+
+  .attempt-dot.used { background: var(--red); }
+
+  /* ── SUBMIT BTN ────────────────────────────────────── */
+  .btn-login {
+    width: 100%;
+    padding: 13px;
+    background: var(--orange);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .btn-login:hover {
+    background: #fb923c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(249,115,22,0.4);
+  }
+
+  .btn-login:active { transform: translateY(0); }
+
+  .btn-login:disabled {
+    background: var(--border);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Loading spinner en botón */
+  .btn-login .spinner {
+    display: none;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin: 0 auto;
+  }
+
+  .btn-login.loading .btn-text { display: none; }
+  .btn-login.loading .spinner  { display: block; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── ROLES HINT ────────────────────────────────────── */
+  .roles-hint {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+
+  .roles-hint-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .roles-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .role-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .role-pill:hover {
+    border-color: var(--border-bright);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .role-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .role-pill .rname {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  /* ── SUCCESS STATE ─────────────────────────────────── */
+  .success-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-base);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .success-overlay.show { display: flex; }
+
+  .success-icon {
+    width: 64px; height: 64px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .success-icon svg { width: 32px; height: 32px; stroke: #000; }
+
+  .success-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    animation: fadeUp 0.4s ease 0.2s both;
+  }
+
+  .success-sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    animation: fadeUp 0.4s ease 0.3s both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CORNER DECO ───────────────────────────────────── */
+  .corner-deco {
+    position: absolute;
+    top: 24px; right: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: right;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LADO IZQUIERDO ──────────────────────────────────── -->
+<div class="left-panel">
+  <div class="deco-number">M</div>
+  <div class="deco-line"></div>
+
+  <div class="left-content">
+    <div class="left-tag">Sistema activo</div>
+
+    <div class="left-title">
+      Sistema<br>
+      Integral
+      <span class="highlight">Minero</span>
+    </div>
+
+    <p class="left-desc">
+      Gestión completa de personal, tareos biométricos,
+      almacén, EPPs y planillas para operaciones mineras
+      en La Libertad, Perú.
+    </p>
+
+    <div class="modules-row">
+      <div class="mod-chip active">Tareos</div>
+      <div class="mod-chip active">Almacén</div>
+      <div class="mod-chip active">EPPs</div>
+      <div class="mod-chip active">Planilla</div>
+      <div class="mod-chip">Adelantos</div>
+      <div class="mod-chip">Permisos</div>
+      <div class="mod-chip">Legajo</div>
+      <div class="mod-chip">Dashboard</div>
+    </div>
+
+    <div class="left-stats">
+      <div class="left-stat">
+        <div class="num">10</div>
+        <div class="lbl">Módulos</div>
+      </div>
+      <div class="left-stat">
+        <div class="num">26</div>
+        <div class="lbl">Tablas BD</div>
+      </div>
+      <div class="left-stat">
+        <div class="num">5</div>
+        <div class="lbl">Roles</div>
+      </div>
+      <div class="left-stat">
+        <div class="num">30×12</div>
+        <div class="lbl">Régimen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LADO DERECHO ────────────────────────────────────── -->
+<div class="right-panel">
+
+  <div class="corner-deco">
+    v1.0.0<br>
+    Pataz, La Libertad
+  </div>
+
+  <div class="login-box">
+
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="login-logo-text">
+        <div class="name">Minera Pataz</div>
+        <div class="sub">Sistema de Gestión</div>
+      </div>
+    </div>
+
+    <div class="login-heading">Iniciar Sesión</div>
+    <div class="login-sub">Ingresa tus credenciales para continuar</div>
+
+    <!-- Error -->
+    <div class="error-msg" id="error-msg">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="error-text">Usuario o contraseña incorrectos</span>
+    </div>
+
+    <!-- Intentos -->
+    <div class="attempts-row" id="attempts-row" style="display:none">
+      <div class="attempt-dot" id="d1"></div>
+      <div class="attempt-dot" id="d2"></div>
+      <div class="attempt-dot" id="d3"></div>
+      <div class="attempt-dot" id="d4"></div>
+      <div class="attempt-dot" id="d5"></div>
+      <span style="font-size:10px;color:var(--text-muted);margin-left:6px;
+                   font-family:'JetBrains Mono',monospace" id="attempts-txt"></span>
+    </div>
+
+    <!-- Usuario -->
+    <div class="form-group">
+      <label class="form-label">Usuario</label>
+      <div class="form-input-wrap">
+        <input
+          type="text"
+          class="form-input"
+          id="username"
+          placeholder="Ingresa tu usuario"
+          autocomplete="username"
+        />
+        <span class="input-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Contraseña -->
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <div class="form-input-wrap">
+        <input
+          type="password"
+          class="form-input"
+          id="password"
+          placeholder="Ingresa tu contraseña"
+          autocomplete="current-password"
+        />
+        <span class="input-icon" id="toggle-pass" title="Mostrar/ocultar">
+          <svg id="eye-icon" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+
+    <!-- Botón -->
+    <button class="btn-login" id="btn-login" onclick="doLogin()">
+      <span class="btn-text">Ingresar al sistema</span>
+      <div class="spinner"></div>
+    </button>
+
+    <!-- Roles rápidos -->
+    <div class="roles-hint">
+      <div class="roles-hint-title">Acceso rápido (demo)</div>
+      <div class="roles-grid">
+        <div class="role-pill" onclick="fillCreds('admin','admin2026')">
+          <div class="role-dot" style="background:#f97316"></div>
+          <span class="rname">Administrador</span>
+        </div>
+        <div class="role-pill" onclick="fillCreds('rrhh','rrhh2026')">
+          <div class="role-dot" style="background:#3b82f6"></div>
+          <span class="rname">RRHH</span>
+        </div>
+        <div class="role-pill" onclick="fillCreds('supervisor','sup2026')">
+          <div class="role-dot" style="background:#22c55e"></div>
+          <span class="rname">Supervisor</span>
+        </div>
+        <div class="role-pill" onclick="fillCreds('almacen','alm2026')">
+          <div class="role-dot" style="background:#eab308"></div>
+          <span class="rname">Almacén</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── SUCCESS OVERLAY ─────────────────────────────────── -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <div class="success-text">Acceso autorizado</div>
+  <div class="success-sub" id="success-sub">Bienvenido, redirigiendo...</div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let intentos = 0;
+
+// ── TOGGLE PASSWORD ────────────────────────────────────────
+document.getElementById('toggle-pass').addEventListener('click', () => {
+  const inp  = document.getElementById('password');
+  const icon = document.getElementById('eye-icon');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    icon.innerHTML = `
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    `;
+  } else {
+    inp.type = 'password';
+    icon.innerHTML = `
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    `;
+  }
+});
+
+// ── ENTER KEY ──────────────────────────────────────────────
+document.getElementById('password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('username').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('password').focus();
+});
+
+// ── FILL CREDS ─────────────────────────────────────────────
+function fillCreds(user, pass) {
+  document.getElementById('username').value = user;
+  document.getElementById('password').value = pass;
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+  document.getElementById('error-msg').classList.remove('show');
+}
+
+// ── SHOW ERROR ─────────────────────────────────────────────
+function showError(msg) {
+  intentos++;
+  const errEl = document.getElementById('error-msg');
+  document.getElementById('error-text').textContent = msg;
+  errEl.classList.add('show');
+  errEl.style.animation = 'none';
+  errEl.offsetHeight; // reflow
+  errEl.style.animation = 'shake 0.4s ease';
+
+  document.getElementById('username').classList.add('error');
+  document.getElementById('password').classList.add('error');
+
+  // Mostrar puntos de intentos
+  if (intentos >= 1) {
+    document.getElementById('attempts-row').style.display = 'flex';
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.getElementById('d' + i);
+      if (dot) dot.classList.toggle('used', i <= intentos);
+    }
+    const rest = 5 - intentos;
+    document.getElementById('attempts-txt').textContent =
+      rest > 0 ? `${rest} intento(s) restante(s)` : 'Cuenta bloqueada';
+  }
+}
+
+// ── LOGIN ──────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('btn-login');
+
+  if (!username || !password) {
+    showError('Completa todos los campos');
+    return;
+  }
+
+  if (intentos >= 5) {
+    showError('Cuenta bloqueada. Contacte al administrador.');
+    return;
+  }
+
+  // Loading state
+  btn.classList.add('loading');
+  btn.disabled = true;
+  document.getElementById('error-msg').classList.remove('show');
+  document.getElementById('username').classList.remove('error');
+  document.getElementById('password').classList.remove('error');
+
+  try {
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      showError(data.detail || 'Credenciales incorrectas');
+      return;
+    }
+
+    // Guardar token y datos de sesión
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('rol',      data.rol);
+    localStorage.setItem('username', data.username);
+    localStorage.setItem('trabajador_id', data.trabajador_id || '');
+
+    // Mostrar éxito
+    const overlay = document.getElementById('success-overlay');
+    document.getElementById('success-sub').textContent =
+      `Bienvenido, ${data.username} — Rol: ${data.rol}`;
+    overlay.classList.add('show');
+
+    // Redirigir al dashboard
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1500);
+
+  } catch (err) {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+
+    // Si la API no responde, simular login de demo
+    if (username === 'admin' && password === 'nueva_clave123') {
+      localStorage.setItem('token',    'demo-token');
+      localStorage.setItem('rol',      'admin');
+      localStorage.setItem('username', 'admin');
+      const overlay = document.getElementById('success-overlay');
+      document.getElementById('success-sub').textContent =
+        'Bienvenido, admin — Modo demo';
+      overlay.classList.add('show');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+    } else {
+      showError('No se pudo conectar al servidor');
+    }
+  }
+}
+
+// ── CHIPS ANIMADOS ─────────────────────────────────────────
+const chips = document.querySelectorAll('.mod-chip');
+chips.forEach((chip, i) => {
+  setTimeout(() => {
+    chip.style.transition = 'all 0.3s ease';
+    chip.style.opacity = '1';
+  }, i * 80);
+});
+
+// Foco automático
+document.getElementById('username').focus();
+</script>
+</body>
+</html>

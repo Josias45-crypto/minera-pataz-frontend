@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPPs — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-base:#0a0a0a;--bg-panel:#111111;--bg-card:#181818;--bg-hover:#1f1f1f;--border:#2a2a2a;--border-bright:#3a3a3a;--orange:#f97316;--orange-dim:#7c3a0e;--orange-glow:rgba(249,115,22,0.15);--text-primary:#f0f0f0;--text-secondary:#888888;--text-muted:#444444;--green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;--yellow:#eab308;--yellow-dim:#713f12;--blue:#3b82f6;--blue-dim:#1e3a8a;--sidebar-w:240px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+  .sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:20px;height:20px;fill:#000;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;}
+  .logo-text .sub{font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;}
+  .sidebar-section{padding:8px 0;border-bottom:1px solid var(--border);}
+  .sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;}
+  .nav-item:hover{background:var(--bg-hover);color:var(--text-primary);border-left-color:var(--border-bright);}
+  .nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+  .nav-item .icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);}
+  .user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;}
+  .user-info .uname{font-size:12px;font-weight:600;}.user-info .urole{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;}
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{height:52px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;}
+  .content{padding:20px 24px;flex:1;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;animation:fadeUp 0.3s ease both;}
+  .stat{background:var(--bg-card);border:1px solid var(--border);border-radius:7px;padding:12px 14px;position:relative;overflow:hidden;}
+  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+  .stat.green::before{background:var(--green)}.stat.orange::before{background:var(--orange)}.stat.red::before{background:var(--red)}.stat.yellow::before{background:var(--yellow)}
+  .stat-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:5px;}
+  .stat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;line-height:1;}
+  .stat.green .stat-val{color:var(--green)}.stat.orange .stat-val{color:var(--orange)}.stat.red .stat-val{color:var(--red)}.stat.yellow .stat-val{color:var(--yellow)}
+  .stat-sub{font-size:10px;color:var(--text-secondary);margin-top:3px;}
+  .main-tabs{display:flex;gap:2px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:16px;animation:fadeUp 0.35s ease 0.05s both;}
+  .main-tab{flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;}
+  .main-tab.active{background:var(--bg-panel);color:var(--orange);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+  .tab-view{display:none;}.tab-view.active{display:block;}
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .search-wrap{position:relative;flex:1;max-width:300px;}
+  .search-input{width:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:8px 32px 8px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .search-input:focus{border-color:var(--orange);}.search-input::placeholder{color:var(--text-muted);}
+  .search-icon{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:var(--text-muted);}
+  .search-icon svg{width:13px;height:13px;}
+  .filter-select{background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text-secondary);font-size:12px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;}
+  .filter-select:focus{border-color:var(--orange);color:var(--text-primary);}
+  .btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
+  .btn svg{width:14px;height:14px;}
+  .btn-primary{background:var(--orange);color:#000;}.btn-primary:hover{background:#fb923c;box-shadow:0 4px 14px rgba(249,115,22,0.3);}
+  .btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border);}.btn-ghost:hover{border-color:var(--border-bright);color:var(--text-primary);}
+  .ml-auto{margin-left:auto;}
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;animation:fadeUp 0.4s ease 0.1s both;}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg-panel);}
+  .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead tr{border-bottom:1px solid var(--border);background:var(--bg-panel);}
+  thead th{padding:9px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--bg-hover);}
+  tbody td{padding:10px 12px;color:var(--text-secondary);}
+  tbody td:first-child{color:var(--text-primary);font-weight:600;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+  .badge.green{background:var(--green-dim);color:var(--green)}.badge.red{background:var(--red-dim);color:var(--red)}.badge.orange{background:var(--orange-dim);color:var(--orange)}.badge.yellow{background:var(--yellow-dim);color:var(--yellow)}.badge.blue{background:var(--blue-dim);color:var(--blue)}
+  .row-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;}
+  tbody tr:hover .row-actions{opacity:1;}
+  .action-btn{padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:'Barlow Condensed',sans-serif;transition:all 0.15s;}
+  .action-btn:hover{border-color:var(--orange);color:var(--orange);}
+  /* dias restantes bar */
+  .dias-bar{display:flex;align-items:center;gap:6px;}
+  .dias-fill-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;min-width:50px;overflow:hidden;}
+  .dias-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:1;}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;}
+  .modal-close{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .modal-close:hover{border-color:var(--red);color:var(--red);}
+  .modal-body{padding:20px;display:flex;flex-direction:column;gap:12px;}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-panel);}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;}
+  .form-input,.form-select{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .form-input:focus,.form-select:focus{border-color:var(--orange);}
+  .form-input::placeholder{color:var(--text-muted);}
+  .form-select option{background:var(--bg-card);}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group.full{grid-column:1/-1;}
+  ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:999;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}.toast.warning{border-color:var(--yellow)}
+  .toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .toast.success .toast-dot{background:var(--green)}.toast.error .toast-dot{background:var(--red)}.toast.warning .toast-dot{background:var(--yellow)}
+</style>
+</head>
+
+<body data-modulo="epps">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores</a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Tareos</a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Permisos</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén</a>
+    <a class="nav-item active" href="epps.html" data-modulo="epps"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Adelantos</a>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla</a>
+  </div>
+    <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>Configuración
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card"><div class="user-avatar" id="nav-avatar">AD</div><div class="user-info"><div class="uname" id="nav-user">admin</div><div class="urole" id="nav-rol">Administrador</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Equipos de Protección Personal</div>
+    <div style="margin-left:auto;display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="openModal('tipo')">+ Tipo de EPP</button>
+      <button class="btn btn-primary" onclick="openModal('entrega')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Registrar Entrega
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat green"><div class="stat-lbl">EPPs vigentes</div><div class="stat-val" id="s-vigentes">—</div><div class="stat-sub">en buen estado</div></div>
+      <div class="stat yellow"><div class="stat-lbl">Por vencer (15d)</div><div class="stat-val" id="s-por-vencer">—</div><div class="stat-sub">requieren atención</div></div>
+      <div class="stat red"><div class="stat-lbl">Vencidos</div><div class="stat-val" id="s-vencidos">—</div><div class="stat-sub">reemplazar urgente</div></div>
+      <div class="stat orange"><div class="stat-lbl">Tipos registrados</div><div class="stat-val" id="s-tipos">—</div><div class="stat-sub">en catálogo</div></div>
+    </div>
+
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchTab('entregas',this)">Entregas activas</button>
+      <button class="main-tab" onclick="switchTab('vencer',this)">Por vencer</button>
+      <button class="main-tab" onclick="switchTab('vencidos',this)">Vencidos</button>
+      <button class="main-tab" onclick="switchTab('tipos',this)">Tipos de EPP</button>
+    </div>
+
+    <!-- ENTREGAS ACTIVAS -->
+    <div class="tab-view active" id="tab-entregas">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <input type="text" class="search-input" placeholder="Buscar trabajador o EPP..." id="search-epp" oninput="filterEpp()">
+          <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        </div>
+        <select class="filter-select" id="filter-tipo-epp" onchange="filterEpp()">
+          <option value="">Todos los tipos</option>
+        </select>
+      </div>
+      <div class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Trabajador</th><th>EPP</th><th>Talla</th><th>Entrega</th><th>Vencimiento</th><th>Días restantes</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody-entregas"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- POR VENCER -->
+    <div class="tab-view" id="tab-vencer">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">EPPs por vencer en 15 días</div><span style="font-size:11px;color:var(--yellow)">Planificar reemplazo</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Trabajador</th><th>EPP</th><th>Vence</th><th>Días restantes</th><th>Acción</th></tr></thead>
+            <tbody id="tbody-vencer"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENCIDOS -->
+    <div class="tab-view" id="tab-vencidos">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">EPPs Vencidos</div><span style="font-size:11px;color:var(--red)">Reemplazar de inmediato</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Trabajador</th><th>EPP</th><th>Venció</th><th>Días vencido</th><th>Acción</th></tr></thead>
+            <tbody id="tbody-vencidos"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIPOS -->
+    <div class="tab-view" id="tab-tipos">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Catálogo de tipos de EPP</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>EPP</th><th>Vida útil</th><th>Requiere talla</th><th>Obligatorio</th></tr></thead>
+            <tbody id="tbody-tipos"><tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">—</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+const API=`http://127.0.0.1:8000`,TOKEN=localStorage.getItem('token')||'';
+let entregas=[],tipos=[],trabajadores=[];
+
+async function init(){
+  const u=localStorage.getItem('username')||'admin',r=localStorage.getItem('rol')||'admin';
+  document.getElementById('nav-user').textContent=u;
+  document.getElementById('nav-rol').textContent=r;
+  document.getElementById('nav-avatar').textContent=u.slice(0,2).toUpperCase();
+  await Promise.all([loadTipos(),loadTrabajadores()]);
+  await loadEntregas();
+}
+
+async function apiFetch(path,opts={}){
+  try{
+    const r=await fetch(API+path,{headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...opts.headers},...opts});
+    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.status);}
+    return await r.json();
+  }catch(e){console.warn(path,e.message);return null;}
+}
+
+async function loadTipos(){
+  const data=await apiFetch('/epps/tipos');
+  tipos=data||[{id:1,nombre:'Casco de seguridad',vida_util_dias:1825,requiere_talla:false,obligatorio:true},{id:2,nombre:'Zapatos de seguridad',vida_util_dias:365,requiere_talla:true,obligatorio:true},{id:3,nombre:'Lentes de seguridad',vida_util_dias:180,requiere_talla:false,obligatorio:true}];
+  const ft=document.getElementById('filter-tipo-epp');
+  tipos.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.nombre;ft.appendChild(o);});
+  document.getElementById('s-tipos').textContent=tipos.length;
+  renderTipos();
+}
+
+async function loadTrabajadores(){
+  const data=await apiFetch('/trabajadores/?activo=false');
+  trabajadores=data||[{id:1,nombres:'Juan Carlos',apellidos:'Quispe Mamani'},{id:2,nombres:'Carlos Ramón',apellidos:'Medina Flores'},{id:3,nombres:'Rosa Lucía',apellidos:'Torres Vega'}];
+}
+
+async function loadEntregas(){
+  const data=await apiFetch('/epps/por-vencer');
+  entregas=data||[
+    {id:1,trabajador_id:1,tipo_epp_id:1,fecha_entrega:'2026-03-02',fecha_vencimiento:'2031-03-02',talla:null,vigente:true},
+    {id:2,trabajador_id:2,tipo_epp_id:2,fecha_entrega:'2026-01-01',fecha_vencimiento:'2026-04-01',talla:'42',vigente:true},
+  ];
+
+  const hoy=new Date();
+  const en15=new Date();en15.setDate(en15.getDate()+15);
+
+  let vigentes=0,porVencer=0,vencidos=0;
+  entregas.forEach(e=>{
+    const venc=new Date(e.fecha_vencimiento);
+    if(venc<hoy) vencidos++;
+    else if(venc<=en15) porVencer++;
+    else vigentes++;
+  });
+  document.getElementById('s-vigentes').textContent=vigentes;
+  document.getElementById('s-por-vencer').textContent=porVencer;
+  document.getElementById('s-vencidos').textContent=vencidos;
+
+  renderEntregas(entregas);
+  renderPorVencer();
+  renderVencidos();
+}
+
+function getDiasRestantes(fechaVenc){
+  return Math.round((new Date(fechaVenc)-new Date())/(1000*60*60*24));
+}
+
+function renderEntregas(data){
+  const tbody=document.getElementById('tbody-entregas');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Sin entregas registradas</td></tr>`;return;}
+  const hoy=new Date();
+  tbody.innerHTML=data.map(e=>{
+    const t=trabajadores.find(x=>x.id===e.trabajador_id);
+    const tipo=tipos.find(x=>x.id===e.tipo_epp_id);
+    const nombre=t?`${t.apellidos}, ${t.nombres}`:`Trabajador #${e.trabajador_id}`;
+    const venc=new Date(e.fecha_vencimiento);
+    const dias=getDiasRestantes(e.fecha_vencimiento);
+    const isVenc=venc<hoy,isPorVenc=!isVenc&&dias<=15;
+    const color=isVenc?'var(--red)':isPorVenc?'var(--yellow)':'var(--green)';
+    const pct=tipo?Math.min(100,Math.max(0,Math.round((dias/tipo.vida_util_dias)*100))):50;
+    const badge=isVenc?'<span class="badge red">Vencido</span>':isPorVenc?'<span class="badge yellow">Por vencer</span>':'<span class="badge green">Vigente</span>';
+    return `<tr>
+      <td>${nombre}</td>
+      <td>${tipo?tipo.nombre:`EPP #${e.tipo_epp_id}`}</td>
+      <td class="mono">${e.talla||'—'}</td>
+      <td class="mono">${e.fecha_entrega}</td>
+      <td class="mono" style="color:${color}">${e.fecha_vencimiento}</td>
+      <td>
+        <div class="dias-bar">
+          <div class="dias-fill-wrap"><div class="dias-fill" style="width:${isVenc?100:pct}%;background:${color}"></div></div>
+          <span class="mono" style="color:${color}">${isVenc?'Vencido':dias+'d'}</span>
+        </div>
+      </td>
+      <td>${badge}</td>
+      <td><div class="row-actions"><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Reemplazar</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterEpp(){
+  const q=document.getElementById('search-epp').value.toLowerCase();
+  const tipo=document.getElementById('filter-tipo-epp').value;
+  const filtered=entregas.filter(e=>{
+    const t=trabajadores.find(x=>x.id===e.trabajador_id);
+    const nombre=t?`${t.nombres} ${t.apellidos}`.toLowerCase():'';
+    const tp=tipos.find(x=>x.id===e.tipo_epp_id);
+    const tnombre=tp?tp.nombre.toLowerCase():'';
+    return(!q||nombre.includes(q)||tnombre.includes(q))&&(!tipo||e.tipo_epp_id==tipo);
+  });
+  renderEntregas(filtered);
+}
+
+function renderPorVencer(){
+  const hoy=new Date(),en15=new Date();en15.setDate(en15.getDate()+15);
+  const data=entregas.filter(e=>{const v=new Date(e.fecha_vencimiento);return v>=hoy&&v<=en15;});
+  const tbody=document.getElementById('tbody-vencer');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--green)">✓ Ningún EPP vence en los próximos 15 días</td></tr>`;return;}
+  tbody.innerHTML=data.map(e=>{
+    const t=trabajadores.find(x=>x.id===e.trabajador_id);
+    const tipo=tipos.find(x=>x.id===e.tipo_epp_id);
+    const dias=getDiasRestantes(e.fecha_vencimiento);
+    return `<tr>
+      <td>${t?`${t.apellidos}, ${t.nombres}`:`#${e.trabajador_id}`}</td>
+      <td>${tipo?tipo.nombre:`#${e.tipo_epp_id}`}</td>
+      <td class="mono" style="color:var(--yellow)">${e.fecha_vencimiento}</td>
+      <td><span class="badge yellow">${dias} días</span></td>
+      <td><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Entregar nuevo</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderVencidos(){
+  const hoy=new Date();
+  const data=entregas.filter(e=>new Date(e.fecha_vencimiento)<hoy);
+  const tbody=document.getElementById('tbody-vencidos');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--green)">✓ Sin EPPs vencidos</td></tr>`;return;}
+  tbody.innerHTML=data.map(e=>{
+    const t=trabajadores.find(x=>x.id===e.trabajador_id);
+    const tipo=tipos.find(x=>x.id===e.tipo_epp_id);
+    const dias=Math.abs(getDiasRestantes(e.fecha_vencimiento));
+    return `<tr>
+      <td>${t?`${t.apellidos}, ${t.nombres}`:`#${e.trabajador_id}`}</td>
+      <td>${tipo?tipo.nombre:`#${e.tipo_epp_id}`}</td>
+      <td class="mono" style="color:var(--red)">${e.fecha_vencimiento}</td>
+      <td><span class="badge red">${dias} días</span></td>
+      <td><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Reemplazar urgente</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTipos(){
+  const tbody=document.getElementById('tbody-tipos');
+  if(!tipos.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">Sin tipos registrados</td></tr>`;return;}
+  tbody.innerHTML=tipos.map(t=>`<tr>
+    <td>${t.nombre}</td>
+    <td><span class="mono">${Math.round(t.vida_util_dias/365*10)/10} años (${t.vida_util_dias} días)</span></td>
+    <td>${t.requiere_talla?'<span class="badge blue">Sí</span>':'—'}</td>
+    <td>${t.obligatorio?'<span class="badge red">Obligatorio</span>':'<span class="badge yellow">Opcional</span>'}</td>
+  </tr>`).join('');
+}
+
+function switchTab(tab,btn){
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+function openModal(type,trabajadorId=null){
+  const trabOpts=trabajadores.map(t=>`<option value="${t.id}" ${t.id==trabajadorId?'selected':''}>${t.apellidos}, ${t.nombres}</option>`).join('');
+  const tipoOpts=tipos.map(t=>`<option value="${t.id}">${t.nombre}</option>`).join('');
+  const body=document.getElementById('modal-body');
+  const footer=document.getElementById('modal-footer');
+
+  if(type==='entrega'){
+    document.getElementById('modal-title').textContent='Registrar Entrega de EPP';
+    body.innerHTML=`
+      <div class="form-group"><label class="form-label">Trabajador *</label><select class="form-select" id="f-trabajador"><option value="">Seleccionar...</option>${trabOpts}</select></div>
+      <div class="form-group"><label class="form-label">Tipo de EPP *</label><select class="form-select" id="f-tipo" onchange="checkTalla()">${tipoOpts}</select></div>
+      <div class="form-group" id="g-talla" style="display:none"><label class="form-label">Talla</label><input type="text" class="form-input" id="f-talla" placeholder="40, M, L..."></div>
+      <div class="form-group"><label class="form-label">Fecha de entrega *</label><input type="date" class="form-input" id="f-fecha" value="${new Date().toISOString().slice(0,10)}"></div>
+      <div class="form-group"><label class="form-label">Observación</label><input type="text" class="form-input" id="f-obs" placeholder="Estado, marca..."></div>`;
+    footer.innerHTML=`<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="guardarEntrega()">Registrar entrega</button>`;
+    checkTalla();
+  } else {
+    document.getElementById('modal-title').textContent='Nuevo Tipo de EPP';
+    body.innerHTML=`
+      <div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-input" id="f-nombre" placeholder="Casco de seguridad"></div>
+      <div class="form-group"><label class="form-label">Vida útil (días) *</label><input type="number" class="form-input" id="f-vida" placeholder="365"></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">¿Requiere talla?</label><select class="form-select" id="f-talla-req"><option value="false">No</option><option value="true">Sí</option></select></div>
+        <div class="form-group"><label class="form-label">¿Es obligatorio?</label><select class="form-select" id="f-oblig"><option value="true">Sí</option><option value="false">No</option></select></div>
+      </div>`;
+    footer.innerHTML=`<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="guardarTipo()">Guardar</button>`;
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function checkTalla(){
+  const tid=document.getElementById('f-tipo')?.value;
+  const tipo=tipos.find(t=>t.id==tid);
+  document.getElementById('g-talla').style.display=tipo?.requiere_talla?'flex':'none';
+}
+
+async function guardarEntrega(){
+  const tid=document.getElementById('f-trabajador').value;
+  const eppId=document.getElementById('f-tipo').value;
+  const fecha=document.getElementById('f-fecha').value;
+  if(!tid||!eppId||!fecha){showToast('Completa los campos obligatorios','error');return;}
+  const r=await apiFetch('/epps/por-vencer',{method:'POST',body:JSON.stringify({
+    trabajador_id:parseInt(tid),tipo_epp_id:parseInt(eppId),
+    fecha_entrega:fecha,talla:document.getElementById('f-talla')?.value||null,
+    observacion:document.getElementById('f-obs').value||null,
+  })});
+  if(r){showToast('EPP entregado y vencimiento calculado','success');closeModal();await loadEntregas();}
+  else showToast('Error al registrar — puede existir EPP vigente','error');
+}
+
+async function guardarTipo(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const vida=parseInt(document.getElementById('f-vida').value);
+  if(!nombre||!vida){showToast('Nombre y vida útil son obligatorios','error');return;}
+  const r=await apiFetch('/epps/tipos',{method:'POST',body:JSON.stringify({
+    nombre,vida_util_dias:vida,
+    requiere_talla:document.getElementById('f-talla-req').value==='true',
+    obligatorio:document.getElementById('f-oblig').value==='true',
+  })});
+  if(r){showToast('Tipo de EPP creado','success');closeModal();await loadTipos();}
+  else showToast('Error al crear tipo','error');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function showToast(msg,type='success'){
+  const t=document.createElement('div');t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>

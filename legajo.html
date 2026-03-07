@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legajo Digital — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg-base:#0a0a0a;--bg-panel:#111111;--bg-card:#181818;--bg-hover:#1f1f1f;--border:#2a2a2a;--border-bright:#3a3a3a;--orange:#f97316;--orange-dim:#7c3a0e;--orange-glow:rgba(249,115,22,0.15);--text-primary:#f0f0f0;--text-secondary:#888888;--text-muted:#444444;--green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;--yellow:#eab308;--yellow-dim:#713f12;--blue:#3b82f6;--blue-dim:#1e3a8a;--sidebar-w:240px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.logo-icon svg{width:20px;height:20px;fill:#000;}
+.logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;}
+.logo-text .sub{font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;}
+.sidebar-section{padding:8px 0;border-bottom:1px solid var(--border);}
+.sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;}
+.nav-item:hover{background:var(--bg-hover);color:var(--text-primary);border-left-color:var(--border-bright);}
+.nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+.nav-item .icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+.nav-item.active .icon{opacity:1;}
+.sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);}
+.user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;}
+.user-info .uname{font-size:12px;font-weight:600;}.user-info .urole{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{height:52px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;}
+.ml-auto{margin-left:auto;}
+.content{padding:20px 24px;flex:1;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:7px;padding:11px 14px;position:relative;overflow:hidden;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat.blue::before{background:var(--blue)}.stat.green::before{background:var(--green)}.stat.yellow::before{background:var(--yellow)}.stat.red::before{background:var(--red)}
+.stat-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1;}
+.stat.blue .stat-val{color:var(--blue)}.stat.green .stat-val{color:var(--green)}.stat.yellow .stat-val{color:var(--yellow)}.stat.red .stat-val{color:var(--red)}
+.stat-sub{font-size:10px;color:var(--text-secondary);margin-top:2px;}
+
+/* LAYOUT 2 COLUMNAS */
+.layout{display:grid;grid-template-columns:280px 1fr;gap:16px;height:calc(100vh - 200px);}
+
+/* PANEL LISTA */
+.workers-panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;overflow:hidden;}
+.workers-header{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--bg-panel);}
+.workers-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+.search-box{position:relative;}
+.search-input{width:100%;background:var(--bg-base);border:1px solid var(--border);border-radius:5px;padding:7px 30px 7px 11px;color:var(--text-primary);font-size:12px;outline:none;transition:border-color 0.2s;font-family:'Barlow',sans-serif;}
+.search-input:focus{border-color:var(--orange);}
+.search-input::placeholder{color:var(--text-muted);}
+.workers-list{flex:1;overflow-y:auto;}
+.worker-row{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:all 0.15s;border-bottom:1px solid var(--border);border-left:2px solid transparent;}
+.worker-row:last-child{border-bottom:none;}
+.worker-row:hover{background:var(--bg-hover);}
+.worker-row.active{background:var(--orange-glow);border-left-color:var(--orange);}
+.w-avatar{width:34px;height:34px;border-radius:7px;background:var(--bg-panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--orange);flex-shrink:0;}
+.worker-row.active .w-avatar{background:var(--orange-dim);}
+.w-name{font-size:12px;font-weight:600;color:var(--text-primary);}
+.w-dni{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+.w-dot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0;}
+.w-dot.ok{background:var(--green)}.w-dot.warn{background:var(--yellow)}.w-dot.crit{background:var(--red)}
+
+/* DETALLE */
+.detail-col{display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);gap:10px;}
+.empty-state svg{width:44px;height:44px;opacity:0.15;}
+.empty-state p{font-size:12px;}
+
+/* FICHA */
+.ficha-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.ficha-top{padding:16px 20px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.ficha-av{width:50px;height:50px;border-radius:10px;background:var(--orange-dim);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--orange);flex-shrink:0;}
+.ficha-nombre{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;line-height:1.1;}
+.ficha-sub{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+.ficha-badges{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+.ficha-grid{padding:14px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.fg-item{display:flex;flex-direction:column;gap:2px;}
+.fg-lbl{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);}
+.fg-val{font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;}
+
+/* TABS */
+.tabs-bar{display:flex;gap:4px;}
+.tab-btn{padding:7px 14px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;}
+.tab-btn:hover{color:var(--text-secondary);border-color:var(--border-bright);}
+.tab-btn.active{background:var(--orange-glow);border-color:var(--orange-dim);color:var(--orange);}
+.tab-view{display:none;}.tab-view.active{display:block;}
+
+/* DOCUMENTOS */
+.docs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:14px;}
+.doc-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:7px;padding:12px;position:relative;overflow:hidden;transition:border-color 0.2s;}
+.doc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.doc-card.vigente::before{background:var(--green)}.doc-card.por-vencer::before{background:var(--yellow)}.doc-card.vencido::before{background:var(--red)}.doc-card.sin-doc::before{background:var(--border)}
+.doc-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;}
+.doc-icon svg{width:13px;height:13px;fill:none;stroke-width:2;}
+.doc-icon.vigente{background:var(--green-dim)}.doc-icon.vigente svg{stroke:var(--green)}
+.doc-icon.por-vencer{background:var(--yellow-dim)}.doc-icon.por-vencer svg{stroke:var(--yellow)}
+.doc-icon.vencido{background:var(--red-dim)}.doc-icon.vencido svg{stroke:var(--red)}
+.doc-icon.sin-doc{background:var(--border)}.doc-icon.sin-doc svg{stroke:var(--text-muted)}
+.doc-tipo{font-size:11px;font-weight:700;color:var(--text-primary);margin-bottom:2px;}
+.doc-venc{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary);}
+.doc-btns{display:flex;gap:4px;margin-top:8px;}
+.dbtn{padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-family:'Barlow Condensed',sans-serif;transition:all 0.15s;}
+.dbtn:hover{border-color:var(--orange);color:var(--orange);}
+
+/* TABLA */
+.panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg-panel);}
+.panel-ttl{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{border-bottom:1px solid var(--border);background:var(--bg-panel);}
+thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);}
+tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg-hover);}
+tbody td{padding:9px 12px;color:var(--text-secondary);font-size:12px;}
+tbody td:first-child{color:var(--text-primary);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}
+.btn-primary{background:var(--orange);color:#000;}.btn-primary:hover{background:#fb923c;}
+.btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border);}.btn-ghost:hover{border-color:var(--border-bright);color:var(--text-primary);}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.btn:disabled{opacity:0.4;cursor:not-allowed;}
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.badge.green{background:var(--green-dim);color:var(--green)}.badge.red{background:var(--red-dim);color:var(--red)}.badge.orange{background:var(--orange-dim);color:var(--orange)}.badge.yellow{background:var(--yellow-dim);color:var(--yellow)}.badge.blue{background:var(--blue-dim);color:var(--blue)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.modal-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:1;}
+.modal-ttl{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;}
+.modal-x{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.modal-x:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:20px;display:flex;flex-direction:column;gap:12px;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-panel);}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.flbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;}
+.finput,.fsel{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;width:100%;}
+.finput:focus,.fsel:focus{border-color:var(--orange);}
+.finput::placeholder{color:var(--text-muted);}
+.fsel option{background:var(--bg-card);}
+.info-box{background:var(--bg-base);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--text-secondary);}
+
+::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:999;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}.toast.warning{border-color:var(--yellow)}
+.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.toast.success .toast-dot{background:var(--green)}.toast.error .toast-dot{background:var(--red)}.toast.warning .toast-dot{background:var(--yellow)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+
+<body data-modulo="legajo">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="index.html"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Inicio</a>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dashboard</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores</a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Tareos</a>
+    <a class="nav-item active" href="legajo.html" data-modulo="legajo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Legajo Digital</a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Permisos / Adelantos</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén</a>
+    <a class="nav-item" href="epps.html" data-modulo="epps"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuración</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">AD</div>
+      <div class="user-info"><div class="uname" id="nav-user">admin</div><div class="urole" id="nav-rol">Administrador</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Legajo Digital</div>
+    <div class="ml-auto" style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" id="btn-exportar" onclick="exportarFicha()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar Ficha
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-subir" onclick="openModalDoc()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Subir Documento
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat blue"><div class="stat-lbl">Con legajo</div><div class="stat-val" id="s-total">—</div><div class="stat-sub">trabajadores</div></div>
+      <div class="stat green"><div class="stat-lbl">Documentos OK</div><div class="stat-val" id="s-ok">—</div><div class="stat-sub">vigentes</div></div>
+      <div class="stat yellow"><div class="stat-lbl">Por vencer</div><div class="stat-val" id="s-vencer">—</div><div class="stat-sub">próximos 30 días</div></div>
+      <div class="stat red"><div class="stat-lbl">Vencidos</div><div class="stat-val" id="s-vencidos">—</div><div class="stat-sub">renovar urgente</div></div>
+    </div>
+
+    <!-- LAYOUT -->
+    <div class="layout">
+      <!-- LISTA -->
+      <div class="workers-panel">
+        <div class="workers-header">
+          <div class="workers-label">Trabajadores</div>
+          <div class="search-box">
+            <input type="text" class="search-input" placeholder="Buscar nombre o DNI..." id="search-w" oninput="filterW()">
+          </div>
+        </div>
+        <div class="workers-list" id="workers-list">
+          <div style="text-align:center;padding:30px;color:var(--text-muted);font-size:12px">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- DETALLE -->
+      <div class="detail-col" id="detail-col">
+        <div class="empty-state" id="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          <p>Selecciona un trabajador para ver su legajo</p>
+        </div>
+        <div id="ficha-wrap" style="display:none;flex-direction:column;gap:12px;animation:fadeUp 0.3s ease"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-ttl" id="modal-ttl">Subir Documento</div><button class="modal-x" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<script>
+const API   = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+let trabajadores = [], docsMap = {}, selectedId = null;
+
+const TIPOS = [
+  {key:'contrato',        label:'Contrato de trabajo'},
+  {key:'examen_medico',   label:'Examen médico'},
+  {key:'sctr',            label:'SCTR'},
+  {key:'curso_seguridad', label:'Curso de seguridad'},
+  {key:'dni',             label:'Copia de DNI'},
+  {key:'otro',            label:'Otro documento'},
+];
+
+async function apiFetch(path, opts={}){
+  try{
+    const r = await fetch(API+path,{headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})},...opts});
+    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.status);}
+    return await r.json();
+  }catch(e){console.warn(path,e.message);return null;}
+}
+
+async function init(){
+  const u=localStorage.getItem('username')||'admin';
+  const r=localStorage.getItem('rol')||'admin';
+  document.getElementById('nav-user').textContent   = u;
+  document.getElementById('nav-rol').textContent    = r;
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+  await loadTrabajadores();
+}
+
+async function loadTrabajadores(){
+  const data = await apiFetch('/trabajadores/');
+  trabajadores = data || [
+    {id:1,nombres:'Juan Carlos',apellidos:'Quispe Mamani',dni:'12345678',activo:true,tarifa_diaria:150,sistema_pension:'AFP',porcentaje_pension:10,fecha_ingreso:'2026-01-01',quincena:1},
+    {id:2,nombres:'Joel Josias', apellidos:'Rojas Alca',   dni:'75627990',activo:true,tarifa_diaria:120,sistema_pension:'AFP',porcentaje_pension:10,fecha_ingreso:'2025-05-05',quincena:2},
+    {id:3,nombres:'Juan Jesus',  apellidos:'Perez Rios',   dni:'76837786',activo:true,tarifa_diaria:100,sistema_pension:'ONP',porcentaje_pension:13,fecha_ingreso:'2025-04-05',quincena:1},
+  ];
+  document.getElementById('s-total').textContent = trabajadores.filter(t=>t.activo).length;
+  renderList(trabajadores);
+}
+
+function renderList(data){
+  const el = document.getElementById('workers-list');
+  if(!data.length){el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin resultados</div>`;return;}
+  el.innerHTML = data.map(t=>{
+    const ini  = (t.nombres[0]+(t.apellidos[0]||'')).toUpperCase();
+    const docs = docsMap[t.id]||[];
+    const hoy  = new Date(), en30 = new Date(); en30.setDate(en30.getDate()+30);
+    const crit = docs.some(d=>d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy);
+    const warn = !crit&&docs.some(d=>{if(!d.fecha_vencimiento)return false;const v=new Date(d.fecha_vencimiento);return v>=hoy&&v<=en30;});
+    return `<div class="worker-row${selectedId===t.id?' active':''}" onclick="selectWorker(${t.id})">
+      <div class="w-avatar">${ini}</div>
+      <div><div class="w-name">${t.apellidos}, ${t.nombres}</div><div class="w-dni">${t.dni}</div></div>
+      <div class="w-dot ${crit?'crit':warn?'warn':'ok'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function filterW(){
+  const q = document.getElementById('search-w').value.toLowerCase();
+  renderList(trabajadores.filter(t=>`${t.nombres} ${t.apellidos}`.toLowerCase().includes(q)||t.dni.includes(q)));
+}
+
+async function selectWorker(id){
+  selectedId = id;
+  document.getElementById('btn-subir').disabled    = false;
+  document.getElementById('btn-exportar').disabled = false;
+
+  // Cargar docs
+  const docs = await apiFetch(`/legajo/trabajador/${id}/documentos`);
+  docsMap[id] = docs || [];
+
+  renderList(trabajadores);
+  renderFicha(trabajadores.find(t=>t.id===id), docsMap[id]);
+  calcStats();
+}
+
+function calcStats(){
+  let ok=0, vencer=0, vencidos=0;
+  const hoy=new Date(), en30=new Date(); en30.setDate(en30.getDate()+30);
+  Object.values(docsMap).flat().forEach(d=>{
+    if(!d.fecha_vencimiento)return;
+    const v=new Date(d.fecha_vencimiento);
+    if(v<hoy) vencidos++;
+    else if(v<=en30) vencer++;
+    else ok++;
+  });
+  document.getElementById('s-ok').textContent       = ok;
+  document.getElementById('s-vencer').textContent   = vencer;
+  document.getElementById('s-vencidos').textContent = vencidos;
+}
+
+function renderFicha(t, docs){
+  document.getElementById('empty-state').style.display = 'none';
+  const wrap = document.getElementById('ficha-wrap');
+  wrap.style.display = 'flex';
+  const ini = (t.nombres[0]+(t.apellidos[0]||'')).toUpperCase();
+
+  wrap.innerHTML = `
+    <!-- FICHA PERSONAL -->
+    <div class="ficha-card">
+      <div class="ficha-top">
+        <div class="ficha-av">${ini}</div>
+        <div>
+          <div class="ficha-nombre">${t.apellidos}, ${t.nombres}</div>
+          <div class="ficha-sub">DNI: ${t.dni}</div>
+          <div class="ficha-badges">
+            <span class="badge ${t.activo?'green':'red'}">${t.activo?'Activo':'Inactivo'}</span>
+            <span class="badge blue">${t.sistema_pension} ${t.porcentaje_pension}%</span>
+            <span class="badge orange">Quincena ${t.quincena||1}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ficha-grid">
+        <div class="fg-item"><div class="fg-lbl">Fecha ingreso</div><div class="fg-val">${t.fecha_ingreso||'—'}</div></div>
+        <div class="fg-item"><div class="fg-lbl">Tarifa / día</div><div class="fg-val">S/. ${parseFloat(t.tarifa_diaria||0).toFixed(2)}</div></div>
+        <div class="fg-item"><div class="fg-lbl">Sueldo estimado</div><div class="fg-val">S/. ${(parseFloat(t.tarifa_diaria||0)*26).toFixed(2)}</div></div>
+        <div class="fg-item"><div class="fg-lbl">Fecha cese</div><div class="fg-val" style="color:${t.fecha_cese?'var(--red)':'var(--text-muted)'}">${t.fecha_cese||'—'}</div></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div>
+      <div class="tabs-bar" style="margin-bottom:10px">
+        <button class="tab-btn active" onclick="switchTab('docs',this)">📄 Documentos</button>
+        <button class="tab-btn" onclick="switchTab('tareos',this)">📅 Tareos</button>
+        <button class="tab-btn" onclick="switchTab('epps',this)">⛑ EPPs</button>
+        <button class="tab-btn" onclick="switchTab('pagos',this)">💰 Pagos</button>
+      </div>
+
+      <!-- DOCUMENTOS -->
+      <div class="tab-view active" id="tv-docs">
+        <div class="panel">
+          <div class="panel-hdr">
+            <div class="panel-ttl">Documentos</div>
+            <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openModalDoc()">+ Subir</button>
+          </div>
+          <div class="docs-grid" id="docs-grid">${buildDocCards(docs)}</div>
+        </div>
+      </div>
+
+      <!-- TAREOS -->
+      <div class="tab-view" id="tv-tareos">
+        <div class="panel">
+          <div class="panel-hdr">
+            <div class="panel-ttl">Historial de Tareos</div>
+            <select id="sel-mes" onchange="loadTareos()" style="margin-left:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:5px 8px;color:var(--text-secondary);font-size:11px;outline:none">
+              <option value="3">Marzo 2026</option>
+              <option value="2">Febrero 2026</option>
+              <option value="1">Enero 2026</option>
+            </select>
+          </div>
+          <div id="tareos-body" style="padding:12px">
+            <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EPPs -->
+      <div class="tab-view" id="tv-epps">
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-ttl">EPPs Entregados</div></div>
+          <div id="epps-body" style="padding:12px">
+            <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGOS -->
+      <div class="tab-view" id="tv-pagos">
+        <div class="panel">
+          <div class="panel-hdr"><div class="panel-ttl">Historial de Pagos</div></div>
+          <div id="pagos-body" style="padding:12px">
+            <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  loadTareos();
+  loadEpps();
+  loadPagos();
+}
+
+function buildDocCards(docs){
+  return TIPOS.map(tipo=>{
+    const doc = docs.find(d=>d.tipo_documento===tipo.key);
+    if(!doc) return `
+      <div class="doc-card sin-doc">
+        <div class="doc-icon sin-doc"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="12" x2="12" y2="18"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+        <div class="doc-tipo">${tipo.label}</div>
+        <div class="doc-venc" style="color:var(--text-muted)">Sin documento</div>
+        <span class="badge" style="background:var(--border);color:var(--text-muted);margin-top:6px">No cargado</span>
+        <div class="doc-btns"><button class="dbtn" onclick="openModalDoc('${tipo.key}')">+ Subir</button></div>
+      </div>`;
+    const hoy=new Date(), en30=new Date(); en30.setDate(en30.getDate()+30);
+    const v   = new Date(doc.fecha_vencimiento);
+    const dias = Math.round((v-hoy)/(1000*60*60*24));
+    const est  = v<hoy?'vencido':v<=en30?'por-vencer':'vigente';
+    const label= est==='vencido'?`Vencido hace ${Math.abs(dias)}d`:est==='por-vencer'?`Vence en ${dias}d`:'Vigente';
+    const bcls = est==='vigente'?'green':est==='por-vencer'?'yellow':'red';
+    return `
+      <div class="doc-card ${est}">
+        <div class="doc-icon ${est}"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="doc-tipo">${tipo.label}</div>
+        <div class="doc-venc">${doc.fecha_vencimiento}</div>
+        <span class="badge ${bcls}" style="margin-top:6px">${label}</span>
+        <div class="doc-btns">
+          ${doc.url?`<button class="dbtn" onclick="window.open('${doc.url}','_blank')">Ver</button>`:''}
+          <button class="dbtn" onclick="openModalDoc('${tipo.key}')">Renovar</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function switchTab(id, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tv-'+id).classList.add('active');
+}
+
+async function loadTareos(){
+  const mes  = document.getElementById('sel-mes')?.value || 3;
+  const data = await apiFetch(`/tareos/trabajador/${selectedId}?mes=${mes}&anio=2026`);
+  const body = document.getElementById('tareos-body');
+  if(!body) return;
+  if(!data||!data.length){body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin registros en este período</div>`;return;}
+  const res={asistio:0,dobla:0,permiso:0,falta:0,descanso:0};
+  data.forEach(d=>{if(res[d.estado]!==undefined)res[d.estado]++;});
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const badges={asistio:'<span class="badge green">Presente</span>',dobla:'<span class="badge orange">Dobla</span>',permiso:'<span class="badge blue">Permiso</span>',falta:'<span class="badge red">Falta</span>',descanso:'<span class="badge yellow">Descanso</span>'};
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--green)">${res.asistio}</div><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted)">Presentes</div></div>
+      <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--orange)">${res.dobla}</div><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted)">Doblas</div></div>
+      <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--blue)">${res.permiso}</div><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted)">Permisos</div></div>
+      <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--red)">${res.falta}</div><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted)">Faltas</div></div>
+      <div style="text-align:center"><div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--yellow)">${res.descanso}</div><div style="font-size:9px;text-transform:uppercase;color:var(--text-muted)">Descansos</div></div>
+    </div>
+    <table><thead><tr><th>Fecha</th><th>Día</th><th>Entrada</th><th>Tardanza</th><th>Estado</th></tr></thead>
+    <tbody>${data.map(a=>{
+      const f=new Date(a.fecha+'T00:00:00');
+      return `<tr>
+        <td class="mono">${a.fecha}</td>
+        <td>${dias[f.getDay()]}</td>
+        <td class="mono">${a.hora_entrada?String(a.hora_entrada).slice(0,5):'—'}</td>
+        <td class="mono" style="color:${(a.tardanza_minutos||0)>0?'var(--red)':'var(--text-muted)'}">${(a.tardanza_minutos||0)>0?a.tardanza_minutos+'min':'—'}</td>
+        <td>${badges[a.estado]||a.estado}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+}
+
+async function loadEpps(){
+  const data = await apiFetch(`/epps/trabajador/${selectedId}`);
+  const body = document.getElementById('epps-body');
+  if(!body) return;
+  if(!data||!data.length){body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin EPPs registrados</div>`;return;}
+  body.innerHTML=`<table><thead><tr><th>Tipo EPP</th><th>Entregado</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+  <tbody>${data.map(e=>{
+    const hoy=new Date(),v=new Date(e.fecha_vencimiento);
+    const est=v<hoy?'<span class="badge red">Vencido</span>':'<span class="badge green">Vigente</span>';
+    return `<tr><td>EPP #${e.tipo_epp_id}</td><td class="mono">${e.fecha_entrega}</td><td class="mono">${e.fecha_vencimiento}</td><td>${est}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+
+async function loadPagos(){
+  const body = document.getElementById('pagos-body');
+  if(!body) return;
+  const periodos=[{mes:3,anio:2026,label:'Marzo 2026'},{mes:2,anio:2026,label:'Febrero 2026'},{mes:1,anio:2026,label:'Enero 2026'}];
+  const boletas=[];
+  for(const p of periodos){
+    const b=await apiFetch(`/planilla/boleta/${selectedId}?mes=${p.mes}&anio=${p.anio}`);
+    if(b) boletas.push({...b,...p});
+  }
+  if(!boletas.length){body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin historial de pagos</div>`;return;}
+  body.innerHTML=`<table><thead><tr><th>Período</th><th>Días</th><th>Bruto</th><th>Descuentos</th><th>Neto</th></tr></thead>
+  <tbody>${boletas.map(b=>`<tr>
+    <td>${b.label}</td>
+    <td class="mono">${b.dias_trabajados||'—'}</td>
+    <td class="mono">S/. ${parseFloat(b.ingresos?.sueldo_bruto||b.sueldo_bruto||0).toFixed(2)}</td>
+    <td class="mono" style="color:var(--red)">- S/. ${parseFloat(b.descuentos?.total||b.total_descuentos||0).toFixed(2)}</td>
+    <td class="mono" style="color:${(b.neto_a_pagar||0)>=0?'var(--green)':'var(--red)'}">S/. ${parseFloat(b.neto_a_pagar||0).toFixed(2)}</td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+function openModalDoc(tipoKey=''){
+  const opts=TIPOS.map(t=>`<option value="${t.key}"${t.key===tipoKey?' selected':''}>${t.label}</option>`).join('');
+  document.getElementById('modal-ttl').textContent='Subir Documento';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="fg"><label class="flbl">Tipo de documento *</label><select class="fsel" id="f-tipo">${opts}</select></div>
+    <div class="fg"><label class="flbl">URL del documento *</label><input type="url" class="finput" id="f-url" placeholder="https://drive.google.com/..."></div>
+    <div class="fg"><label class="flbl">Fecha de vencimiento *</label><input type="date" class="finput" id="f-venc"></div>
+    <div class="fg"><label class="flbl">Observación</label><input type="text" class="finput" id="f-obs" placeholder="Notas adicionales..."></div>
+    <div class="info-box">💡 Sube el archivo a Google Drive y pega aquí el enlace de visualización.</div>`;
+  document.getElementById('modal-foot').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarDoc()">Guardar documento</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function guardarDoc(){
+  const tipo = document.getElementById('f-tipo').value;
+  const url  = document.getElementById('f-url').value.trim();
+  const venc = document.getElementById('f-venc').value;
+  const obs  = document.getElementById('f-obs').value;
+  if(!url||!venc){showToast('URL y fecha son obligatorios','error');return;}
+  const r = await apiFetch('/legajo/documentos',{method:'POST',body:JSON.stringify({
+    trabajador_id:selectedId,tipo_documento:tipo,url,fecha_vencimiento:venc,observacion:obs||null
+  })});
+  if(r){
+    showToast('Documento guardado','success');
+    closeModal();
+    const docs = await apiFetch(`/legajo/trabajador/${selectedId}/documentos`);
+    docsMap[selectedId] = docs||[];
+    document.getElementById('docs-grid').innerHTML = buildDocCards(docsMap[selectedId]);
+    calcStats();
+    renderList(trabajadores);
+  } else showToast('Error al guardar documento','error');
+}
+
+function exportarFicha(){
+  if(!selectedId) return;
+  const t    = trabajadores.find(x=>x.id===selectedId);
+  const docs = docsMap[selectedId]||[];
+  const rows = [
+    ['LEGAJO DIGITAL — MINERA PATAZ'],[''],
+    ['Apellidos',t.apellidos],['Nombres',t.nombres],['DNI',t.dni],
+    ['Ingreso',t.fecha_ingreso||''],['Tarifa diaria',t.tarifa_diaria],
+    ['Sistema pensión',t.sistema_pension],['% pensión',t.porcentaje_pension],
+    ['Quincena',t.quincena||1],['Estado',t.activo?'Activo':'Inactivo'],[''],
+    ['DOCUMENTOS'],['Tipo','URL','Vencimiento','Estado'],
+    ...docs.map(d=>{
+      const v=new Date(d.fecha_vencimiento),hoy=new Date();
+      return [d.tipo_documento,d.url,d.fecha_vencimiento,v<hoy?'VENCIDO':'VIGENTE'];
+    })
+  ];
+  const csv  = rows.map(r=>r.join(',')).join('\n');
+  const a    = document.createElement('a');
+  a.href     = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = `legajo_${t.apellidos}_${t.nombres}.csv`;
+  a.click();
+  showToast('Legajo exportado','success');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>

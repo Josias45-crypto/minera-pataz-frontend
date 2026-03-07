@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trabajadores — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:    #0a0a0a;
+    --bg-panel:   #111111;
+    --bg-card:    #181818;
+    --bg-hover:   #1f1f1f;
+    --border:     #2a2a2a;
+    --border-bright: #3a3a3a;
+    --orange:     #f97316;
+    --orange-dim: #7c3a0e;
+    --orange-glow: rgba(249,115,22,0.15);
+    --text-primary:   #f0f0f0;
+    --text-secondary: #888888;
+    --text-muted:     #444444;
+    --green:      #22c55e;
+    --green-dim:  #14532d;
+    --red:        #ef4444;
+    --red-dim:    #7f1d1d;
+    --yellow:     #eab308;
+    --yellow-dim: #713f12;
+    --blue:       #3b82f6;
+    --blue-dim:   #1e3a8a;
+    --sidebar-w:  240px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    top: 0; left: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--orange);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: #000; }
+  .logo-text .name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .logo-text .sub {
+    font-size: 10px; color: var(--text-secondary);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .sidebar-section { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .sidebar-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-muted);
+    padding: 10px 16px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 16px; cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 13px; font-weight: 500;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); border-left-color: var(--border-bright); }
+  .nav-item.active { background: var(--orange-glow); color: var(--orange); border-left-color: var(--orange); }
+  .nav-item .icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+  .nav-item.active .icon { opacity: 1; }
+  .nav-badge {
+    margin-left: auto; background: var(--red); color: #fff;
+    font-size: 9px; font-weight: 700; padding: 1px 5px;
+    border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+  }
+  .sidebar-bottom { margin-top: auto; padding: 12px; border-top: 1px solid var(--border); }
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 6px;
+    background: var(--bg-card); border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 30px; height: 30px; background: var(--orange-dim);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--orange);
+    font-family: 'Barlow Condensed', sans-serif; flex-shrink: 0;
+  }
+  .user-info .uname { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+  .user-info .urole { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ── MAIN ────────────────────────────────────────── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    height: 52px; background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px; gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .topbar-count {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 2px 10px; border-radius: 20px;
+    font-size: 11px; color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .content { padding: 24px; flex: 1; }
+
+  /* ── TOOLBAR ─────────────────────────────────────── */
+  .toolbar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    animation: fadeUp 0.3s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .search-wrap {
+    position: relative; flex: 1; max-width: 320px;
+  }
+  .search-input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 36px 8px 14px;
+    color: var(--text-primary);
+    font-size: 13px; font-family: 'Barlow', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--orange); }
+  .search-input::placeholder { color: var(--text-muted); }
+  .search-icon {
+    position: absolute; right: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted); pointer-events: none;
+  }
+  .search-icon svg { width: 14px; height: 14px; }
+
+  .filter-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--text-secondary);
+    font-size: 12px; font-family: 'Barlow', sans-serif;
+    outline: none; cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .filter-select:focus { border-color: var(--orange); color: var(--text-primary); }
+
+  .btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; border: none;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary { background: var(--orange); color: #000; }
+  .btn-primary:hover { background: #fb923c; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(249,115,22,0.3); }
+  .btn-ghost { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--border-bright); color: var(--text-primary); background: var(--bg-hover); }
+  .ml-auto { margin-left: auto; }
+
+  /* ── TABLA ────────────────────────────────────────── */
+  .table-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease 0.1s both;
+  }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { border-bottom: 1px solid var(--border); background: var(--bg-panel); }
+  thead th {
+    padding: 10px 14px; text-align: left;
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted); white-space: nowrap; cursor: pointer;
+    user-select: none; transition: color 0.15s;
+  }
+  thead th:hover { color: var(--text-secondary); }
+  thead th.sorted { color: var(--orange); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-hover); }
+  tbody td { padding: 11px 14px; color: var(--text-secondary); }
+  tbody td:first-child { color: var(--text-primary); font-weight: 600; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 3px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge.green  { background: var(--green-dim);  color: var(--green); }
+  .badge.red    { background: var(--red-dim);    color: var(--red); }
+  .badge.orange { background: var(--orange-dim); color: var(--orange); }
+  .badge.yellow { background: var(--yellow-dim); color: var(--yellow); }
+  .badge.blue   { background: var(--blue-dim);   color: var(--blue); }
+
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+  .avatar-cell { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 800; color: var(--orange);
+    flex-shrink: 0;
+  }
+  .avatar-info .aname { font-weight: 600; color: var(--text-primary); font-size: 13px; }
+  .avatar-info .adni  { font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  .row-actions {
+    display: flex; gap: 4px;
+    opacity: 0; transition: opacity 0.15s;
+  }
+  tbody tr:hover .row-actions { opacity: 1; }
+  .action-btn {
+    padding: 4px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    cursor: pointer; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    font-family: 'Barlow Condensed', sans-serif;
+    transition: all 0.15s;
+  }
+  .action-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .action-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── PAGINACIÓN ──────────────────────────────────── */
+  .pagination {
+    display: flex; align-items: center; gap: 6px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-panel);
+  }
+  .page-info {
+    font-size: 11px; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-right: auto;
+  }
+  .page-btn {
+    width: 28px; height: 28px;
+    border-radius: 4px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-family: 'JetBrains Mono', monospace;
+  }
+  .page-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .page-btn.active { background: var(--orange); color: #000; border-color: var(--orange); font-weight: 700; }
+  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── MODAL ───────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200; align-items: center; justify-content: center;
+    padding: 24px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 100%; max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; background: var(--bg-panel); z-index: 1;
+  }
+  .modal-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .modal-close {
+    width: 28px; height: 28px;
+    border-radius: 4px; border: 1px solid var(--border);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: var(--red); color: var(--red); }
+  .modal-body { padding: 20px; }
+  .modal-footer {
+    padding: 14px 20px; border-top: 1px solid var(--border);
+    display: flex; gap: 8px; justify-content: flex-end;
+    position: sticky; bottom: 0; background: var(--bg-panel);
+  }
+
+  /* ── FORM ────────────────────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .form-input, .form-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 12px;
+    color: var(--text-primary);
+    font-size: 13px; font-family: 'Barlow', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--orange); }
+  .form-input::placeholder { color: var(--text-muted); }
+  .form-select option { background: var(--bg-card); }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--orange); margin: 16px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--orange-dim);
+  }
+
+  /* ── DETAIL PANEL ────────────────────────────────── */
+  .detail-overlay {
+    display: none; position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 420px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    z-index: 150;
+    overflow-y: auto;
+    animation: slideInRight 0.25s ease;
+  }
+  .detail-overlay.open { display: block; }
+  @keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  .detail-header {
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; background: var(--bg-panel); z-index: 1;
+  }
+  .detail-avatar {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--orange-dim); border: 1px solid var(--orange-dim);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 900; color: var(--orange);
+    flex-shrink: 0;
+  }
+  .detail-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800; text-transform: uppercase;
+    line-height: 1.1;
+  }
+  .detail-sub { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .detail-body { padding: 20px; }
+  .detail-section { margin-bottom: 20px; }
+  .detail-section-title {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .dk { font-size: 11px; color: var(--text-secondary); }
+  .detail-row .dv { font-size: 12px; color: var(--text-primary); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── EMPTY STATE ─────────────────────────────────── */
+  .empty-state {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: 0.3; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── SCROLLBAR ───────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; z-index: 999;
+    animation: toastIn 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .toast.success { border-color: var(--green); }
+  .toast.error   { border-color: var(--red); }
+  .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .toast.success .toast-dot { background: var(--green); }
+  .toast.error   .toast-dot { background: var(--red); }
+</style>
+</head>
+
+<body data-modulo="trabajadores">
+
+<!-- ── SIDEBAR ─────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="name">Minera Pataz</div>
+      <div class="sub">Sistema Integral</div>
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item active" href="trabajadores.html" data-modulo="trabajadores">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Trabajadores
+    </a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Tareos
+    </a>
+    <a class="nav-item" href="legajo.html" data-modulo="legajo">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Legajo Digital
+    </a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Permisos
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Almacén
+    </a>
+    <a class="nav-item" href="epps.html" data-modulo="epps">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      EPPs
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Adelantos
+    </a>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla">>
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Planilla
+    </a>
+  </div>
+    <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>Configuración
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">AD</div>
+      <div class="user-info">
+        <div class="uname" id="nav-user">admin</div>
+        <div class="urole" id="nav-rol">Administrador</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Trabajadores</div>
+    <div class="topbar-count" id="total-count">— registros</div>
+  </div>
+
+  <div class="content">
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input type="text" class="search-input"
+               placeholder="Buscar por nombre, DNI o fotocheck..."
+               id="search-input" oninput="filterTable()">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </span>
+      </div>
+      <select class="filter-select" id="filter-estado" onchange="filterTable()">
+        <option value="">Todos</option>
+        <option value="activo">Activos</option>
+        <option value="inactivo">Inactivos</option>
+      </select>
+      <select class="filter-select" id="filter-cargo" onchange="filterTable()">
+        <option value="">Todos los cargos</option>
+      </select>
+      <button class="btn btn-ghost ml-auto" onclick="exportar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar
+      </button>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo Trabajador
+      </button>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-panel">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Trabajador</th>
+              <th>Fotocheck</th>
+              <th>Cargo</th>
+              <th>Área</th>
+              <th>Socio</th>
+              <th>Tarifa/día</th>
+              <th>Pensión</th>
+              <th>Ingreso</th>
+              <th>Estado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="10" style="text-align:center;padding:40px;color:var(--text-muted)">
+                Cargando trabajadores...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="page-info">—</div>
+        <button class="page-btn" id="btn-prev" onclick="changePage(-1)">‹</button>
+        <div id="page-numbers"></div>
+        <button class="page-btn" id="btn-next" onclick="changePage(1)">›</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ── MODAL NUEVO/EDITAR ──────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuevo Trabajador</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="section-title">Datos Personales</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">DNI *</label>
+          <input type="text" class="form-input" id="f-dni" maxlength="8" placeholder="12345678">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fotocheck</label>
+          <input type="text" class="form-input" id="f-fotocheck" placeholder="FC-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombres *</label>
+          <input type="text" class="form-input" id="f-nombres" placeholder="Juan Carlos">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Apellidos *</label>
+          <input type="text" class="form-input" id="f-apellidos" placeholder="Quispe Mamani">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono</label>
+          <input type="text" class="form-input" id="f-telefono" placeholder="987654321">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="f-email" placeholder="juan@email.com">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-input" id="f-direccion" placeholder="Av. Principal 123, Trujillo">
+        </div>
+      </div>
+
+      <div class="section-title">Contacto de Emergencia</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nombre contacto</label>
+          <input type="text" class="form-input" id="f-contacto" placeholder="María Quispe">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Teléfono contacto</label>
+          <input type="text" class="form-input" id="f-tel-contacto" placeholder="987654322">
+        </div>
+      </div>
+
+      <div class="section-title">Datos Laborales</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Cargo *</label>
+          <select class="form-select" id="f-cargo"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Área *</label>
+          <select class="form-select" id="f-area"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Socio/Contratista *</label>
+          <select class="form-select" id="f-socio"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Turno *</label>
+          <select class="form-select" id="f-turno"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de ingreso *</label>
+          <input type="date" class="form-input" id="f-ingreso">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tarifa diaria (S/.) *</label>
+          <input type="number" class="form-input" id="f-tarifa" placeholder="150.00" step="0.01">
+        </div>
+      </div>
+
+      <div class="section-title">Sistema de Pensiones</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Sistema *</label>
+          <select class="form-select" id="f-pension">
+            <option value="AFP">AFP (10%)</option>
+            <option value="ONP">ONP (13%)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Porcentaje (%)</label>
+          <input type="number" class="form-input" id="f-porcentaje" value="10" step="0.01">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarTrabajador()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PANEL DETALLE ───────────────────────────────────── -->
+<div class="detail-overlay" id="detail-panel">
+  <div class="detail-header">
+    <div class="detail-avatar" id="d-avatar">--</div>
+    <div>
+      <div class="detail-name" id="d-nombre">—</div>
+      <div class="detail-sub" id="d-cargo">—</div>
+    </div>
+    <button class="modal-close" style="margin-left:auto" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-body" id="detail-body">
+    <!-- llenado por JS -->
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+
+let allData   = [];
+let filtered  = [];
+let currentPage = 1;
+const PER_PAGE  = 10;
+let editingId   = null;
+
+// Catálogos
+let cargos = [], areas = [], socios = [], turnos = [];
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  const u = localStorage.getItem('username') || 'admin';
+  const r = localStorage.getItem('rol') || 'admin';
+  document.getElementById('nav-user').textContent = u;
+  document.getElementById('nav-rol').textContent  = r;
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+
+  await loadCatalogos();
+  await loadTrabajadores();
+}
+
+async function apiFetch(path, opts = {}) {
+  try {
+    const r = await fetch(API + path, {
+      headers: {
+        'Authorization': 'Bearer ' + TOKEN,
+        'Content-Type': 'application/json',
+        ...opts.headers
+      },
+      ...opts
+    });
+    if (!r.ok) {
+      const err = await r.json();
+      throw new Error(err.detail || r.status);
+    }
+    return await r.json();
+  } catch(e) {
+    console.warn(path, e.message);
+    return null;
+  }
+}
+
+// ── CATÁLOGOS ─────────────────────────────────────────────
+async function loadCatalogos() {
+  [cargos, areas, socios, turnos] = await Promise.all([
+    apiFetch('/catalogos/cargos'),
+    apiFetch('/catalogos/areas'),
+    apiFetch('/catalogos/socios'),
+    apiFetch('/catalogos/turnos'),
+  ]);
+
+  cargos = cargos || [];
+  areas  = areas  || [];
+  socios = socios || [];
+  turnos = turnos || [];
+
+  // Llenar selects del formulario
+  fillSelect('f-cargo',  cargos,  'nombre');
+  fillSelect('f-area',   areas,   'nombre');
+  fillSelect('f-socio',  socios,  'nombre');
+  fillSelect('f-turno',  turnos,  'nombre');
+
+  // Llenar filtro de cargos
+  const fc = document.getElementById('filter-cargo');
+  cargos.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.nombre; o.textContent = c.nombre;
+    fc.appendChild(o);
+  });
+}
+
+function fillSelect(id, items, label) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">Seleccionar...</option>';
+  items.forEach(item => {
+    const o = document.createElement('option');
+    o.value = item.id; o.textContent = item[label];
+    sel.appendChild(o);
+  });
+}
+
+// ── CARGAR TRABAJADORES ───────────────────────────────────
+async function loadTrabajadores() {
+  const data = await apiFetch('/trabajadores/?activo=false');
+
+  if (!data) {
+    // MOCK data
+    allData = [
+      { id:1, dni:'12345678', nombres:'Juan Carlos', apellidos:'Quispe Mamani',
+        fotocheck_codigo:'FC-001', cargo_id:1, area_id:1, socio_id:1, turno_id:2,
+        tarifa_diaria:150, sistema_pension:'AFP', porcentaje_pension:10,
+        fecha_ingreso:'2026-01-01', activo:true },
+      { id:2, dni:'87654321', nombres:'Carlos Ramón', apellidos:'Medina Flores',
+        fotocheck_codigo:'FC-002', cargo_id:1, area_id:1, socio_id:1, turno_id:2,
+        tarifa_diaria:120, sistema_pension:'ONP', porcentaje_pension:13,
+        fecha_ingreso:'2026-01-15', activo:true },
+      { id:3, dni:'45678901', nombres:'Rosa Lucía', apellidos:'Torres Vega',
+        fotocheck_codigo:'FC-003', cargo_id:1, area_id:1, socio_id:1, turno_id:2,
+        tarifa_diaria:135, sistema_pension:'AFP', porcentaje_pension:10,
+        fecha_ingreso:'2025-11-01', activo:true },
+    ];
+  } else {
+    allData = data;
+  }
+
+  filtered = [...allData];
+  document.getElementById('total-count').textContent =
+    `${allData.length} registro${allData.length !== 1 ? 's' : ''}`;
+
+  renderTable();
+}
+
+// ── RENDER TABLA ──────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('tbody');
+  const start = (currentPage - 1) * PER_PAGE;
+  const page  = filtered.slice(start, start + PER_PAGE);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr><td colspan="10">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+          </svg>
+          <p>No se encontraron trabajadores</p>
+        </div>
+      </td></tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = page.map(t => {
+    const cargo  = cargos.find(c => c.id === t.cargo_id);
+    const area   = areas.find(a => a.id === t.area_id);
+    const socio  = socios.find(s => s.id === t.socio_id);
+    const ini    = t.nombres.charAt(0) + t.apellidos.charAt(0);
+
+    return `
+    <tr onclick="openDetail(${t.id})">
+      <td>
+        <div class="avatar-cell">
+          <div class="avatar">${ini.toUpperCase()}</div>
+          <div class="avatar-info">
+            <div class="aname">${t.apellidos}, ${t.nombres}</div>
+            <div class="adni">${t.dni}</div>
+          </div>
+        </div>
+      </td>
+      <td class="mono">${t.fotocheck_codigo || '—'}</td>
+      <td>${cargo ? cargo.nombre : '—'}</td>
+      <td>${area  ? area.nombre  : '—'}</td>
+      <td>${socio ? socio.nombre : '—'}</td>
+      <td class="mono">S/. ${parseFloat(t.tarifa_diaria).toFixed(2)}</td>
+      <td>
+        <span class="badge ${t.sistema_pension === 'AFP' ? 'blue' : 'yellow'}">
+          ${t.sistema_pension} ${t.porcentaje_pension}%
+        </span>
+      </td>
+      <td class="mono">${t.fecha_ingreso}</td>
+      <td>
+        <span class="badge ${t.activo ? 'green' : 'red'}">
+          ${t.activo ? 'Activo' : 'Inactivo'}
+        </span>
+      </td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn" onclick="event.stopPropagation();editTrabajador(${t.id})">Editar</button>
+          <button class="action-btn danger" onclick="event.stopPropagation();desactivar(${t.id}, '${t.nombres}')">Baja</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  renderPagination();
+  document.getElementById('page-info').textContent =
+    `${start+1}–${Math.min(start+PER_PAGE, filtered.length)} de ${filtered.length}`;
+}
+
+// ── PAGINACIÓN ────────────────────────────────────────────
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  const nums  = document.getElementById('page-numbers');
+  nums.innerHTML = '';
+  for (let i = 1; i <= total; i++) {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    b.textContent = i;
+    b.onclick = () => { currentPage = i; renderTable(); };
+    nums.appendChild(b);
+  }
+  document.getElementById('btn-prev').disabled = currentPage === 1;
+  document.getElementById('btn-next').disabled = currentPage === total;
+}
+
+function changePage(dir) {
+  const total = Math.ceil(filtered.length / PER_PAGE);
+  currentPage = Math.max(1, Math.min(total, currentPage + dir));
+  renderTable();
+}
+
+// ── FILTRO ────────────────────────────────────────────────
+function filterTable() {
+  const q      = document.getElementById('search-input').value.toLowerCase();
+  const estado = document.getElementById('filter-estado').value;
+  const cargo  = document.getElementById('filter-cargo').value;
+
+  filtered = allData.filter(t => {
+    const nombre = `${t.nombres} ${t.apellidos}`.toLowerCase();
+    const matchQ = !q || nombre.includes(q) ||
+                   t.dni.includes(q) ||
+                   (t.fotocheck_codigo || '').toLowerCase().includes(q);
+    const matchE = !estado ||
+                   (estado === 'activo'   &&  t.activo) ||
+                   (estado === 'inactivo' && !t.activo);
+    const c = cargos.find(x => x.id === t.cargo_id);
+    const matchC = !cargo || (c && c.nombre === cargo);
+    return matchQ && matchE && matchC;
+  });
+
+  currentPage = 1;
+  renderTable();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modal-title').textContent =
+    id ? 'Editar Trabajador' : 'Nuevo Trabajador';
+  clearForm();
+  if (id) {
+    const t = allData.find(x => x.id === id);
+    if (t) fillForm(t);
+  }
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function clearForm() {
+  ['f-dni','f-fotocheck','f-nombres','f-apellidos','f-telefono',
+   'f-email','f-direccion','f-contacto','f-tel-contacto',
+   'f-ingreso','f-tarifa'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-pension').value   = 'AFP';
+  document.getElementById('f-porcentaje').value = '10';
+}
+
+function fillForm(t) {
+  document.getElementById('f-dni').value       = t.dni || '';
+  document.getElementById('f-fotocheck').value = t.fotocheck_codigo || '';
+  document.getElementById('f-nombres').value   = t.nombres || '';
+  document.getElementById('f-apellidos').value = t.apellidos || '';
+  document.getElementById('f-telefono').value  = t.telefono || '';
+  document.getElementById('f-email').value     = t.email || '';
+  document.getElementById('f-direccion').value = t.direccion || '';
+  document.getElementById('f-contacto').value  = t.contacto_emergencia || '';
+  document.getElementById('f-tel-contacto').value = t.telefono_emergencia || '';
+  document.getElementById('f-cargo').value     = t.cargo_id || '';
+  document.getElementById('f-area').value      = t.area_id  || '';
+  document.getElementById('f-socio').value     = t.socio_id || '';
+  document.getElementById('f-turno').value     = t.turno_id || '';
+  document.getElementById('f-ingreso').value   = t.fecha_ingreso || '';
+  document.getElementById('f-tarifa').value    = t.tarifa_diaria || '';
+  document.getElementById('f-pension').value   = t.sistema_pension || 'AFP';
+  document.getElementById('f-porcentaje').value = t.porcentaje_pension || 10;
+}
+
+// Auto-porcentaje según AFP/ONP
+document.getElementById('f-pension').addEventListener('change', function() {
+  document.getElementById('f-porcentaje').value =
+    this.value === 'AFP' ? 10 : 13;
+});
+
+async function guardarTrabajador() {
+  const payload = {
+    dni:                document.getElementById('f-dni').value.trim(),
+    fotocheck_codigo:   document.getElementById('f-fotocheck').value.trim() || null,
+    nombres:            document.getElementById('f-nombres').value.trim(),
+    apellidos:          document.getElementById('f-apellidos').value.trim(),
+    telefono:           document.getElementById('f-telefono').value.trim() || null,
+    email:              document.getElementById('f-email').value.trim() || null,
+    direccion:          document.getElementById('f-direccion').value.trim() || null,
+    contacto_emergencia: document.getElementById('f-contacto').value.trim() || null,
+    telefono_emergencia: document.getElementById('f-tel-contacto').value.trim() || null,
+    cargo_id:           parseInt(document.getElementById('f-cargo').value),
+    area_id:            parseInt(document.getElementById('f-area').value),
+    socio_id:           parseInt(document.getElementById('f-socio').value),
+    turno_id:           parseInt(document.getElementById('f-turno').value),
+    fecha_ingreso:      document.getElementById('f-ingreso').value,
+    tarifa_diaria:      parseFloat(document.getElementById('f-tarifa').value),
+    sistema_pension:    document.getElementById('f-pension').value,
+    porcentaje_pension: parseFloat(document.getElementById('f-porcentaje').value),
+  };
+
+  if (!payload.dni || payload.dni.length !== 8) {
+    showToast('El DNI debe tener 8 dígitos', 'error'); return;
+  }
+  if (!payload.nombres || !payload.apellidos) {
+    showToast('Nombres y apellidos son obligatorios', 'error'); return;
+  }
+  if (!payload.cargo_id || !payload.area_id || !payload.socio_id || !payload.turno_id) {
+    showToast('Completa todos los datos laborales', 'error'); return;
+  }
+
+  let result;
+  if (editingId) {
+    result = await apiFetch(`/trabajadores/${editingId}`, {
+      method: 'PUT', body: JSON.stringify(payload)
+    });
+  } else {
+    result = await apiFetch('/trabajadores/', {
+      method: 'POST', body: JSON.stringify(payload)
+    });
+  }
+
+  if (result) {
+    showToast(editingId ? 'Trabajador actualizado' : 'Trabajador creado', 'success');
+    closeModal();
+    await loadTrabajadores();
+  } else {
+    showToast('Error al guardar. Verifica los datos.', 'error');
+  }
+}
+
+// ── EDITAR ────────────────────────────────────────────────
+function editTrabajador(id) {
+  closeDetail();
+  openModal(id);
+}
+
+// ── DESACTIVAR ────────────────────────────────────────────
+async function desactivar(id, nombre) {
+  if (!confirm(`¿Dar de baja a ${nombre}? Se registrará la fecha de cese.`)) return;
+  const r = await apiFetch(`/trabajadores/${id}`, { method: 'DELETE' });
+  if (r) {
+    showToast(`${nombre} dado de baja`, 'success');
+    await loadTrabajadores();
+  }
+}
+
+// ── PANEL DETALLE ─────────────────────────────────────────
+function openDetail(id) {
+  const t = allData.find(x => x.id === id);
+  if (!t) return;
+
+  const cargo  = cargos.find(c => c.id === t.cargo_id);
+  const area   = areas.find(a => a.id === t.area_id);
+  const socio  = socios.find(s => s.id === t.socio_id);
+  const turno  = turnos.find(x => x.id === t.turno_id);
+  const ini    = t.nombres.charAt(0) + t.apellidos.charAt(0);
+
+  document.getElementById('d-avatar').textContent = ini.toUpperCase();
+  document.getElementById('d-nombre').textContent = `${t.apellidos}, ${t.nombres}`;
+  document.getElementById('d-cargo').textContent  =
+    `${cargo ? cargo.nombre : '—'} • ${area ? area.nombre : '—'}`;
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Identificación</div>
+      <div class="detail-row"><span class="dk">DNI</span><span class="dv">${t.dni}</span></div>
+      <div class="detail-row"><span class="dk">Fotocheck</span><span class="dv">${t.fotocheck_codigo || '—'}</span></div>
+      <div class="detail-row"><span class="dk">Estado</span>
+        <span class="badge ${t.activo ? 'green' : 'red'}">${t.activo ? 'Activo' : 'Inactivo'}</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Datos Laborales</div>
+      <div class="detail-row"><span class="dk">Cargo</span><span class="dv">${cargo ? cargo.nombre : '—'}</span></div>
+      <div class="detail-row"><span class="dk">Área</span><span class="dv">${area ? area.nombre : '—'}</span></div>
+      <div class="detail-row"><span class="dk">Socio</span><span class="dv">${socio ? socio.nombre : '—'}</span></div>
+      <div class="detail-row"><span class="dk">Turno</span><span class="dv">${turno ? turno.nombre : '—'}</span></div>
+      <div class="detail-row"><span class="dk">Ingreso</span><span class="dv">${t.fecha_ingreso}</span></div>
+      ${t.fecha_cese ? `<div class="detail-row"><span class="dk">Cese</span><span class="dv" style="color:var(--red)">${t.fecha_cese}</span></div>` : ''}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Remuneración</div>
+      <div class="detail-row"><span class="dk">Tarifa diaria</span><span class="dv">S/. ${parseFloat(t.tarifa_diaria).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="dk">Tarifa dobla</span><span class="dv">S/. ${(parseFloat(t.tarifa_diaria)*2).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="dk">Sistema pensión</span>
+        <span class="badge ${t.sistema_pension === 'AFP' ? 'blue' : 'yellow'}">${t.sistema_pension} ${t.porcentaje_pension}%</span>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Contacto</div>
+      <div class="detail-row"><span class="dk">Teléfono</span><span class="dv">${t.telefono || '—'}</span></div>
+      <div class="detail-row"><span class="dk">Email</span><span class="dv">${t.email || '—'}</span></div>
+      <div class="detail-row"><span class="dk">Emergencia</span><span class="dv">${t.contacto_emergencia || '—'}</span></div>
+      <div class="detail-row"><span class="dk">Tel. emergencia</span><span class="dv">${t.telefono_emergencia || '—'}</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="editTrabajador(${t.id})">Editar</button>
+      <button class="btn btn-ghost" onclick="closeDetail()">Cerrar</button>
+    </div>
+  `;
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+
+// ── EXPORTAR ──────────────────────────────────────────────
+function exportar() {
+  const rows = [
+    ['ID','DNI','Apellidos','Nombres','Fotocheck','Cargo','Área','Tarifa','Pensión','Ingreso','Estado'],
+    ...filtered.map(t => {
+      const cargo = cargos.find(c => c.id === t.cargo_id);
+      const area  = areas.find(a  => a.id === t.area_id);
+      return [
+        t.id, t.dni, t.apellidos, t.nombres,
+        t.fotocheck_codigo || '',
+        cargo ? cargo.nombre : '',
+        area  ? area.nombre  : '',
+        t.tarifa_diaria, t.sistema_pension,
+        t.fecha_ingreso, t.activo ? 'Activo' : 'Inactivo'
+      ];
+    })
+  ];
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a   = document.createElement('a');
+  a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `trabajadores_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exportado', 'success');
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── KEY LISTENERS ─────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeDetail(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('search-input').focus();
+  }
+});
+
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>

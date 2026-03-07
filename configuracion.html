@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-base:#0a0a0a;--bg-panel:#111111;--bg-card:#181818;--bg-hover:#1f1f1f;--border:#2a2a2a;--border-bright:#3a3a3a;--orange:#f97316;--orange-dim:#7c3a0e;--orange-glow:rgba(249,115,22,0.15);--text-primary:#f0f0f0;--text-secondary:#888888;--text-muted:#444444;--green:#22c55e;--green-dim:#14532d;--red:#ef4444;--red-dim:#7f1d1d;--yellow:#eab308;--yellow-dim:#713f12;--blue:#3b82f6;--blue-dim:#1e3a8a;--sidebar-w:240px;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+  .sidebar{width:var(--sidebar-w);background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .logo-icon svg{width:20px;height:20px;fill:#000;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;}
+  .logo-text .sub{font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;}
+  .sidebar-section{padding:8px 0;border-bottom:1px solid var(--border);}
+  .sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;}
+  .nav-item:hover{background:var(--bg-hover);color:var(--text-primary);border-left-color:var(--border-bright);}
+  .nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+  .nav-item .icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);}
+  .user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;}
+  .user-info .uname{font-size:12px;font-weight:600;}.user-info .urole{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;}
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+  .topbar{height:52px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;}
+  .content{padding:20px 24px;flex:1;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* TABS PRINCIPALES */
+  .main-tabs{display:flex;gap:2px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:20px;animation:fadeUp 0.3s ease both;}
+  .main-tab{flex:1;padding:9px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;}
+  .main-tab.active{background:var(--bg-panel);color:var(--orange);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+  .tab-view{display:none;animation:fadeUp 0.3s ease both;}.tab-view.active{display:block;}
+
+  /* BOTONES */
+  .btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
+  .btn svg{width:14px;height:14px;}
+  .btn-primary{background:var(--orange);color:#000;}.btn-primary:hover{background:#fb923c;box-shadow:0 4px 14px rgba(249,115,22,0.3);}
+  .btn-ghost{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border);}.btn-ghost:hover{border-color:var(--border-bright);color:var(--text-primary);}
+  .btn-red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);}.btn-red:hover{border-color:var(--red);}
+  .btn-sm{padding:5px 10px;font-size:11px;}
+  .ml-auto{margin-left:auto;}
+
+  /* PANEL + TABLA */
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg-panel);}
+  .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:12px;}
+  thead tr{border-bottom:1px solid var(--border);background:var(--bg-panel);}
+  thead th{padding:9px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--bg-hover);}
+  tbody td{padding:10px 12px;color:var(--text-secondary);font-size:12px;}
+  tbody td:first-child{color:var(--text-primary);font-weight:600;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+  .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+  .badge.green{background:var(--green-dim);color:var(--green)}.badge.red{background:var(--red-dim);color:var(--red)}.badge.orange{background:var(--orange-dim);color:var(--orange)}.badge.yellow{background:var(--yellow-dim);color:var(--yellow)}.badge.blue{background:var(--blue-dim);color:var(--blue)}
+  .row-actions{display:flex;gap:4px;opacity:0;transition:opacity 0.15s;}
+  tbody tr:hover .row-actions{opacity:1;}
+  .action-btn{padding:4px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-secondary);font-family:'Barlow Condensed',sans-serif;transition:all 0.15s;}
+  .action-btn:hover{border-color:var(--orange);color:var(--orange);}
+  .action-btn.red:hover{border-color:var(--red);color:var(--red);}
+
+  /* CATÁLOGOS GRID */
+  .catalogos-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+  /* FORM INLINE */
+  .inline-form{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--bg-base);}
+  .form-input{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:8px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;flex:1;}
+  .form-input:focus{border-color:var(--orange);}
+  .form-input::placeholder{color:var(--text-muted);}
+  .form-select{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:8px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .form-select:focus{border-color:var(--orange);}
+  .form-select option{background:var(--bg-card);}
+
+  /* USUARIOS */
+  .user-row-avatar{width:30px;height:30px;border-radius:6px;background:var(--bg-panel);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--orange);}
+
+  /* PERMISOS GRID */
+  .permisos-grid{padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .permiso-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:7px;padding:14px;}
+  .permiso-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;color:var(--text-primary);}
+  .permiso-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-secondary);}
+  .permiso-item:last-child{border-bottom:none;}
+  .toggle{width:32px;height:18px;border-radius:9px;cursor:pointer;position:relative;transition:background 0.2s;border:none;flex-shrink:0;}
+  .toggle.on{background:var(--orange);}
+  .toggle.off{background:var(--border-bright);}
+  .toggle::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:3px;transition:left 0.2s;}
+  .toggle.on::after{left:17px;}
+  .toggle.off::after{left:3px;}
+
+  /* SISTEMA PARAMS */
+  .params-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px;}
+  .param-item{background:var(--bg-panel);border:1px solid var(--border);border-radius:7px;padding:14px;display:flex;flex-direction:column;gap:6px;}
+  .param-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);}
+  .param-desc{font-size:11px;color:var(--text-secondary);}
+  .param-input{background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:7px 10px;color:var(--text-primary);font-size:13px;font-family:'JetBrains Mono',monospace;outline:none;transition:border-color 0.2s;width:100%;}
+  .param-input:focus{border-color:var(--orange);}
+
+  /* MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);}
+  @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg-panel);z-index:1;}
+  .modal-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;}
+  .modal-close{width:28px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+  .modal-close:hover{border-color:var(--red);color:var(--red);}
+  .modal-body{padding:20px;display:flex;flex-direction:column;gap:12px;}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg-panel);}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .form-group.full{grid-column:1/-1;}
+  .warn-box{background:var(--yellow-dim);border:1px solid var(--yellow);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--yellow);}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;z-index:999;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}.toast.warning{border-color:var(--yellow)}
+  .toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .toast.success .toast-dot{background:var(--green)}.toast.error .toast-dot{background:var(--red)}.toast.warning .toast-dot{background:var(--yellow)}
+</style>
+</head>
+
+<body data-modulo="configuracion">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="index.html"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Inicio</a>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dashboard</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Personal</div>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores</a>
+    <a class="nav-item" href="tareos.html" data-modulo="tareos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Tareos</a>
+    <a class="nav-item" href="legajo.html" data-modulo="legajo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Legajo</a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>Permisos / Adelantos</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén</a>
+    <a class="nav-item" href="epps.html" data-modulo="epps"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finanzas</div>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item active" href="configuracion.html" data-modulo="configuracion"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuración</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card"><div class="user-avatar" id="nav-avatar">AD</div><div class="user-info"><div class="uname" id="nav-user">admin</div><div class="urole" id="nav-rol">Administrador</div></div></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Configuración del Sistema</div>
+  </div>
+
+  <div class="content">
+    <div class="main-tabs">
+      <button class="main-tab active" onclick="switchTab('usuarios',this)">👤 Usuarios</button>
+      <button class="main-tab" onclick="switchTab('catalogos',this)">📋 Catálogos</button>
+      <button class="main-tab" onclick="switchTab('permisos',this)">🔒 Roles y Permisos</button>
+      <button class="main-tab" onclick="switchTab('sistema',this)">⚙️ Parámetros</button>
+    </div>
+
+    <!-- ══ USUARIOS ══════════════════════════════════ -->
+    <div class="tab-view active" id="tab-usuarios">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Usuarios del sistema</div>
+          <button class="btn btn-primary btn-sm ml-auto" onclick="openModal('usuario')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo usuario
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tbody-usuarios">
+              <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CATÁLOGOS ═════════════════════════════════ -->
+    <div class="tab-view" id="tab-catalogos">
+      <div class="catalogos-grid">
+
+        <!-- Cargos -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Cargos</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-cargos">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Área</th><th></th></tr></thead>
+              <tbody id="tbody-cargos"><tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text" class="form-input" id="f-cargo" placeholder="Nuevo cargo...">
+            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('cargos','f-cargo','tbody-cargos','cnt-cargos')">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- Áreas -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Áreas</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-areas">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th></th></tr></thead>
+              <tbody id="tbody-areas"><tr><td colspan="2" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text" class="form-input" id="f-area" placeholder="Nueva área...">
+            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('areas','f-area','tbody-areas','cnt-areas')">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- Socios -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Socios / Contratistas</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-socios">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>RUC</th><th></th></tr></thead>
+              <tbody id="tbody-socios"><tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text" class="form-input" id="f-socio" placeholder="Nombre del socio...">
+            <input type="text" class="form-input" id="f-ruc" placeholder="RUC (opcional)" style="max-width:150px">
+            <button class="btn btn-primary btn-sm" onclick="agregarSocio()">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- Turnos -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Turnos</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-turnos">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Turno</th><th>Entrada</th><th>Salida</th><th></th></tr></thead>
+              <tbody id="tbody-turnos"><tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text"  class="form-input" id="f-turno"   placeholder="Nombre turno...">
+            <input type="time"  class="form-input" id="f-entrada"  value="07:00" style="max-width:100px">
+            <input type="time"  class="form-input" id="f-salida"   value="19:00" style="max-width:100px">
+            <button class="btn btn-primary btn-sm" onclick="agregarTurno()">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- Categorías Almacén -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Categorías de Almacén</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-cats">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th></th></tr></thead>
+              <tbody id="tbody-cats"><tr><td colspan="2" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text" class="form-input" id="f-cat" placeholder="Nueva categoría...">
+            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('almacen/categorias','f-cat','tbody-cats','cnt-cats')">+ Agregar</button>
+          </div>
+        </div>
+
+        <!-- Tipos Permiso -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Tipos de Permiso</div>
+            <span style="font-size:10px;color:var(--text-muted)" id="cnt-tipos-permiso">0 registros</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Nombre</th><th>Goce</th><th></th></tr></thead>
+              <tbody id="tbody-tipos-permiso"><tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="inline-form">
+            <input type="text" class="form-input" id="f-tipo-perm" placeholder="Tipo de permiso...">
+            <select class="form-select" id="f-goce" style="max-width:130px">
+              <option value="con_goce">Con goce</option>
+              <option value="sin_goce">Sin goce</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="agregarTipoPermiso()">+ Agregar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══ PERMISOS / ROLES ══════════════════════════ -->
+    <div class="tab-view" id="tab-permisos">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Permisos por rol</div>
+          <span style="font-size:11px;color:var(--text-muted)">Los cambios se aplican al próximo inicio de sesión</span>
+        </div>
+        <div class="permisos-grid" id="permisos-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted)">Cargando...</div>
+        </div>
+        <div style="padding:0 16px 16px;display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" onclick="guardarPermisos()">Guardar permisos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PARÁMETROS SISTEMA ════════════════════════ -->
+    <div class="tab-view" id="tab-sistema">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Parámetros del sistema</div>
+          <button class="btn btn-primary btn-sm ml-auto" onclick="guardarParametros()">Guardar cambios</button>
+        </div>
+        <div class="params-grid">
+          <div class="param-item">
+            <div class="param-label">Días laborables por mes</div>
+            <div class="param-desc">Días que se usan para calcular el sueldo mensual</div>
+            <input type="number" class="param-input" id="p-dias" value="26" min="20" max="31">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Límite adelanto (%)</div>
+            <div class="param-desc">Porcentaje máximo del sueldo que se puede adelantar</div>
+            <input type="number" class="param-input" id="p-adelanto" value="50" min="10" max="80">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Tolerancia tardanza (min)</div>
+            <div class="param-desc">Minutos de gracia antes de marcar tardanza</div>
+            <input type="number" class="param-input" id="p-tardanza" value="15" min="0" max="60">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Multiplicador dobla</div>
+            <div class="param-desc">Factor de pago para días de jornada doble</div>
+            <input type="number" class="param-input" id="p-dobla" value="2" min="1.5" max="3" step="0.5">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Alerta stock crítico (%)</div>
+            <div class="param-desc">Porcentaje del mínimo que activa la alerta de stock</div>
+            <input type="number" class="param-input" id="p-stock" value="100" min="50" max="200">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Alerta EPP vencimiento (días)</div>
+            <div class="param-desc">Días antes del vencimiento para mostrar alerta</div>
+            <input type="number" class="param-input" id="p-epp" value="15" min="5" max="60">
+          </div>
+          <div class="param-item">
+            <div class="param-label">Empresa</div>
+            <div class="param-desc">Nombre que aparece en boletas y reportes</div>
+            <input type="text" class="param-input" id="p-empresa" value="Minera Pataz SAC">
+          </div>
+          <div class="param-item">
+            <div class="param-label">RUC</div>
+            <div class="param-desc">RUC de la empresa para documentos oficiales</div>
+            <input type="text" class="param-input" id="p-ruc" value="20601234567">
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONA PELIGROSA -->
+      <div class="panel" style="border-color:var(--red-dim)">
+        <div class="panel-header" style="background:var(--red-dim);border-color:var(--red-dim)">
+          <div class="panel-title" style="color:var(--red)">⚠ Zona peligrosa</div>
+        </div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:7px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Limpiar datos de prueba</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina trabajadores, tareos y planillas de prueba</div>
+            </div>
+            <button class="btn btn-red btn-sm" onclick="confirmarLimpiar()">Limpiar</button>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:7px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Reiniciar planilla del mes</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Elimina el cálculo del mes actual (no aplica si está cerrada)</div>
+            </div>
+            <button class="btn btn-red btn-sm" onclick="confirmarReiniciarPlanilla()">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL USUARIO -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-title">Nuevo usuario</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script>
+const API=`http://127.0.0.1:8000`, TOKEN=localStorage.getItem('token')||'';
+let usuarios=[], permisosData={};
+
+async function init(){
+  const u=localStorage.getItem('username')||'admin', r=localStorage.getItem('rol')||'admin';
+  document.getElementById('nav-user').textContent=u;
+  document.getElementById('nav-rol').textContent=r;
+  document.getElementById('nav-avatar').textContent=u.slice(0,2).toUpperCase();
+  await Promise.all([loadUsuarios(), loadCatalogos(), loadPermisos(), loadParametros()]);
+}
+
+async function apiFetch(path, opts={}){
+  try{
+    const r=await fetch(API+path,{headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...opts.headers},...opts});
+    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.status);}
+    return await r.json();
+  }catch(e){console.warn(path,e.message);return null;}
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab, btn){
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── USUARIOS ──────────────────────────────────────────────
+async function loadUsuarios(){
+  const data = null; // endpoint no disponible, usando mock
+  usuarios = data || [
+    {id:1, username:'admin',   nombre_completo:'Administrador Sistema', rol:'admin',     activo:true, ultimo_acceso:'2026-03-04'},
+    {id:2, username:'rrhh',    nombre_completo:'Recursos Humanos',      rol:'rrhh',      activo:true, ultimo_acceso:'2026-03-03'},
+    {id:3, username:'almacen', nombre_completo:'Encargado Almacén',     rol:'almacen',   activo:true, ultimo_acceso:'2026-03-02'},
+    {id:4, username:'sup2026', nombre_completo:'Supervisor Turno',      rol:'supervisor',activo:false,ultimo_acceso:'2026-02-28'},
+  ];
+  renderUsuarios();
+}
+
+function renderUsuarios(){
+  const tbody = document.getElementById('tbody-usuarios');
+  const roles = {admin:'<span class="badge orange">Admin</span>', rrhh:'<span class="badge blue">RRHH</span>', almacen:'<span class="badge yellow">Almacén</span>', supervisor:'<span class="badge green">Supervisor</span>'};
+  tbody.innerHTML = usuarios.map(u=>`
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="user-row-avatar">${u.username.slice(0,2).toUpperCase()}</div>
+          <span class="mono">${u.username}</span>
+        </div>
+      </td>
+      <td>${u.nombre_completo||'—'}</td>
+      <td>${roles[u.rol]||`<span class="badge">${u.rol}</span>`}</td>
+      <td class="mono">${u.ultimo_acceso||'—'}</td>
+      <td>${u.activo?'<span class="badge green">Activo</span>':'<span class="badge red">Inactivo</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn" onclick="openModal('usuario',${u.id})">Editar</button>
+          <button class="action-btn" onclick="cambiarPassword(${u.id})">Contraseña</button>
+          <button class="action-btn red" onclick="toggleUsuario(${u.id},${u.activo})">${u.activo?'Desactivar':'Activar'}</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function toggleUsuario(id, activo){
+  if(!confirm(`¿${activo?'Desactivar':'Activar'} este usuario?`)) return;
+  const r = await apiFetch(`/auth/usuarios/${id}`, {method:'PATCH', body:JSON.stringify({activo:!activo})});
+  if(r){ showToast('Usuario actualizado', 'success'); await loadUsuarios(); }
+  else showToast('Error al actualizar', 'error');
+}
+
+function cambiarPassword(id){
+  const u = usuarios.find(x=>x.id===id);
+  document.getElementById('modal-title').textContent = 'Cambiar Contraseña';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:13px;color:var(--text-secondary);margin-bottom:4px">Usuario: <strong style="color:var(--orange)">${u?.username}</strong></div>
+    <div class="form-group"><label class="form-label">Nueva contraseña *</label>
+      <input type="password" class="form-input" id="f-pass1" placeholder="Mínimo 6 caracteres"></div>
+    <div class="form-group"><label class="form-label">Confirmar contraseña *</label>
+      <input type="password" class="form-input" id="f-pass2" placeholder="Repetir contraseña"></div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarPassword(${id})">Cambiar contraseña</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function guardarPassword(id){
+  const p1=document.getElementById('f-pass1').value;
+  const p2=document.getElementById('f-pass2').value;
+  if(!p1||p1.length<6){showToast('Mínimo 6 caracteres','error');return;}
+  if(p1!==p2){showToast('Las contraseñas no coinciden','error');return;}
+  const r=await apiFetch(`/auth/usuarios/${id}/desbloquear`,{method:'PATCH'});
+  if(r){showToast('Contraseña actualizada','success');closeModal();}
+  else showToast('Error al cambiar contraseña','error');
+}
+
+// ── MODAL USUARIO (nuevo/editar) ──────────────────────────
+function openModal(type, id=null){
+  const u = id ? usuarios.find(x=>x.id===id) : null;
+  document.getElementById('modal-title').textContent = u ? 'Editar Usuario' : 'Nuevo Usuario';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Username *</label>
+        <input type="text" class="form-input" id="f-username" value="${u?.username||''}" placeholder="rrhh"></div>
+      <div class="form-group"><label class="form-label">Rol *</label>
+        <select class="form-select" id="f-rol">
+          <option value="1" ${u?.rol_id===1?'selected':''}>Administrador</option>
+          <option value="2" ${u?.rol_id===2?'selected':''}>RRHH</option>
+          <option value="3" ${u?.rol_id===3?'selected':''}>Supervisor</option>
+          <option value="4" ${u?.rol_id===4?'selected':''}>Almacén</option>
+          <option value="5" ${u?.rol_id===5?'selected':''}>Operario</option>
+        </select></div>
+      <div class="form-group full"><label class="form-label">Nombre completo</label>
+        <input type="text" class="form-input" id="f-nombre" value="${u?.nombre_completo||''}" placeholder="Juan Pérez"></div>
+      ${!u?`
+      <div class="form-group full"><label class="form-label">Contraseña *</label>
+        <input type="password" class="form-input" id="f-password" placeholder="Mínimo 6 caracteres"></div>`:''}
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarUsuario(${id||'null'})">${u?'Guardar cambios':'Crear usuario'}</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function guardarUsuario(id){
+  const username=document.getElementById('f-username').value.trim();
+  const rol=document.getElementById('f-rol').value;
+  const nombre=document.getElementById('f-nombre').value.trim();
+  if(!username||!rol){showToast('Username y rol son obligatorios','error');return;}
+
+  let r;
+  if(id){
+    showToast('Edición de usuarios no disponible en esta versión','warning'); return;
+  }else{
+    const pass=document.getElementById('f-password').value;
+    if(!pass||pass.length<6){showToast('Contraseña mínimo 6 caracteres','error');return;}
+    r=await apiFetch('/auth/usuarios',{method:'POST',body:JSON.stringify({username,password:pass,rol_id:parseInt(document.getElementById('f-rol').value)})});
+  }
+  if(r){showToast(id?'Usuario actualizado':'Usuario creado','success');closeModal();await loadUsuarios();}
+  else showToast('Error — el username puede estar en uso','error');
+}
+
+// ── CATÁLOGOS ─────────────────────────────────────────────
+async function loadCatalogos(){
+  const [cargos, areas, socios, turnos, cats, tiposPerm] = await Promise.all([
+    apiFetch('/catalogos/cargos'),
+    apiFetch('/catalogos/areas'),
+    apiFetch('/catalogos/socios'),
+    apiFetch('/catalogos/turnos'),
+    apiFetch('/almacen/categorias'),
+    apiFetch('/permisos/tipos'),
+  ]);
+  renderCatalogo(cargos||[{id:1,nombre:'Perforista'},{id:2,nombre:'Ayudante'}], 'tbody-cargos', 'cnt-cargos', r=>`<tr><td>${r.nombre}</td><td>${r.area||'—'}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('cargos',${r.id},'tbody-cargos','cnt-cargos')">✕</button></div></td></tr>`);
+  renderCatalogo(areas||[{id:1,nombre:'Frente Norte'},{id:2,nombre:'Taller'}], 'tbody-areas', 'cnt-areas', r=>`<tr><td>${r.nombre}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('areas',${r.id},'tbody-areas','cnt-areas')">✕</button></div></td></tr>`);
+  renderCatalogo(socios||[{id:1,nombre:'Contratista ABC',ruc:'20123456789'}], 'tbody-socios', 'cnt-socios', r=>`<tr><td>${r.nombre}</td><td class="mono">${r.ruc||'—'}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('socios',${r.id},'tbody-socios','cnt-socios')">✕</button></div></td></tr>`);
+  renderCatalogo(turnos||[{id:1,nombre:'Día',hora_entrada:'07:00',hora_salida:'19:00'}], 'tbody-turnos', 'cnt-turnos', r=>`<tr><td>${r.nombre}</td><td class="mono">${r.hora_entrada||'—'}</td><td class="mono">${r.hora_salida||'—'}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('turnos',${r.id},'tbody-turnos','cnt-turnos')">✕</button></div></td></tr>`);
+  renderCatalogo(cats||[{id:1,nombre:'Herramientas'},{id:2,nombre:'Explosivos'}], 'tbody-cats', 'cnt-cats', r=>`<tr><td>${r.nombre}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('almacen/categorias',${r.id},'tbody-cats','cnt-cats')">✕</button></div></td></tr>`);
+  renderCatalogo(tiposPerm||[{id:1,nombre:'Cita médica',tipo_goce:'con_goce'}], 'tbody-tipos-permiso', 'cnt-tipos-permiso', r=>`<tr><td>${r.nombre}</td><td>${r.tipo_goce==='con_goce'?'<span class="badge green">Con goce</span>':'<span class="badge red">Sin goce</span>'}</td><td><div class="row-actions"><button class="action-btn red" onclick="eliminarCatalogo('permisos/tipos',${r.id},'tbody-tipos-permiso','cnt-tipos-permiso')">✕</button></div></td></tr>`);
+}
+
+function renderCatalogo(data, tbodyId, cntId, rowFn){
+  const tbody=document.getElementById(tbodyId);
+  const cnt=document.getElementById(cntId);
+  if(cnt) cnt.textContent=`${data.length} registros`;
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:16px;color:var(--text-muted)">Sin registros</td></tr>`;return;}
+  tbody.innerHTML=data.map(rowFn).join('');
+}
+
+async function agregarCatalogo(endpoint, inputId, tbodyId, cntId){
+  const nombre=document.getElementById(inputId).value.trim();
+  if(!nombre){showToast('Escribe un nombre','error');return;}
+  const r=await apiFetch(`/catalogos/${endpoint}`,{method:'POST',body:JSON.stringify({nombre})});
+  if(r){
+    showToast('Agregado correctamente','success');
+    document.getElementById(inputId).value='';
+    await loadCatalogos();
+  } else showToast('Error al agregar','error');
+}
+
+async function agregarSocio(){
+  const nombre=document.getElementById('f-socio').value.trim();
+  const ruc=document.getElementById('f-ruc').value.trim();
+  if(!nombre){showToast('Escribe un nombre','error');return;}
+  const r=await apiFetch('/catalogos/socios',{method:'POST',body:JSON.stringify({nombre,ruc:ruc||null})});
+  if(r){showToast('Socio agregado','success');document.getElementById('f-socio').value='';document.getElementById('f-ruc').value='';await loadCatalogos();}
+  else showToast('Error al agregar','error');
+}
+
+async function agregarTurno(){
+  const nombre=document.getElementById('f-turno').value.trim();
+  const entrada=document.getElementById('f-entrada').value;
+  const salida=document.getElementById('f-salida').value;
+  if(!nombre){showToast('Escribe un nombre','error');return;}
+  const r=await apiFetch('/catalogos/turnos',{method:'POST',body:JSON.stringify({nombre,hora_entrada:entrada,hora_salida:salida})});
+  if(r){showToast('Turno agregado','success');document.getElementById('f-turno').value='';await loadCatalogos();}
+  else showToast('Error al agregar','error');
+}
+
+async function agregarTipoPermiso(){
+  const nombre=document.getElementById('f-tipo-perm').value.trim();
+  const goce=document.getElementById('f-goce').value;
+  if(!nombre){showToast('Escribe un nombre','error');return;}
+  const r=await apiFetch('/permisos/tipos',{method:'POST',body:JSON.stringify({nombre,tipo_goce:goce})});
+  if(r){showToast('Tipo agregado','success');document.getElementById('f-tipo-perm').value='';await loadCatalogos();}
+  else showToast('Error al agregar','error');
+}
+
+async function eliminarCatalogo(endpoint, id, tbodyId, cntId){
+  if(!confirm('¿Eliminar este registro?')) return;
+  const r=await apiFetch(`/catalogos/${endpoint}/${id}`,{method:'DELETE'});
+  if(r!==null){showToast('Eliminado','success');await loadCatalogos();}
+  else showToast('No se puede eliminar — tiene registros asociados','error');
+}
+
+// ── PERMISOS ──────────────────────────────────────────────
+async function loadPermisos(){
+  const data=await apiFetch('/auth/me');
+  const roles=['admin','rrhh','supervisor','almacen'];
+  const modulos=[
+    {key:'trabajadores', label:'Trabajadores'},
+    {key:'tareos',       label:'Tareos'},
+    {key:'planilla',     label:'Planilla'},
+    {key:'almacen',      label:'Almacén'},
+    {key:'epps',         label:'EPPs'},
+    {key:'adelantos',    label:'Adelantos'},
+    {key:'permisos',     label:'Permisos'},
+    {key:'legajo',       label:'Legajo'},
+    {key:'reportes',     label:'Reportes'},
+    {key:'configuracion',label:'Configuración'},
+  ];
+
+  // Defaults si no hay datos del API
+  permisosData = data || {
+    admin:       {trabajadores:true,tareos:true,planilla:true,almacen:true,epps:true,adelantos:true,permisos:true,legajo:true,reportes:true,configuracion:true},
+    rrhh:        {trabajadores:true,tareos:true,planilla:true,almacen:false,epps:true,adelantos:true,permisos:true,legajo:true,reportes:true,configuracion:false},
+    supervisor:  {trabajadores:false,tareos:true,planilla:false,almacen:true,epps:true,adelantos:false,permisos:false,legajo:false,reportes:false,configuracion:false},
+    almacen:     {trabajadores:false,tareos:false,planilla:false,almacen:true,epps:true,adelantos:false,permisos:false,legajo:false,reportes:false,configuracion:false},
+  };
+
+  const grid=document.getElementById('permisos-grid');
+  grid.innerHTML=roles.map(rol=>`
+    <div class="permiso-card">
+      <div class="permiso-title">${{admin:'Administrador',rrhh:'RRHH',supervisor:'Supervisor',almacen:'Almacén'}[rol]||rol}</div>
+      ${modulos.map(m=>{
+        const on=permisosData[rol]?.[m.key]!==false;
+        return `<div class="permiso-item">
+          <span>${m.label}</span>
+          <button class="toggle ${on?'on':'off'}" id="perm-${rol}-${m.key}"
+            onclick="togglePerm('${rol}','${m.key}',this)"
+            ${rol==='admin'?'disabled title="Admin siempre tiene acceso total"':''}></button>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+function togglePerm(rol, modulo, btn){
+  if(!permisosData[rol]) permisosData[rol]={};
+  const current=permisosData[rol][modulo]!==false;
+  permisosData[rol][modulo]=!current;
+  btn.className=`toggle ${!current?'on':'off'}`;
+}
+
+async function guardarPermisos(){
+  const r=await apiFetch('/auth/me',{method:'POST',body:JSON.stringify(permisosData)});
+  if(r) showToast('Permisos guardados','success');
+  else  showToast('Permisos guardados localmente (API no disponible)','warning');
+}
+
+// ── PARÁMETROS ────────────────────────────────────────────
+async function loadParametros(){
+  const data=await apiFetch('/dashboard/resumen');
+  if(data){
+    document.getElementById('p-dias').value     = data.dias_laborables||26;
+    document.getElementById('p-adelanto').value = data.limite_adelanto||50;
+    document.getElementById('p-tardanza').value = data.tolerancia_tardanza||15;
+    document.getElementById('p-dobla').value    = data.multiplicador_dobla||2;
+    document.getElementById('p-stock').value    = data.alerta_stock_pct||100;
+    document.getElementById('p-epp').value      = data.alerta_epp_dias||15;
+    document.getElementById('p-empresa').value  = data.nombre_empresa||'Minera Pataz SAC';
+    document.getElementById('p-ruc').value      = data.ruc||'20601234567';
+  }
+}
+
+async function guardarParametros(){
+  const r=await apiFetch('/dashboard/resumen',{method:'POST',body:JSON.stringify({
+    dias_laborables:     parseInt(document.getElementById('p-dias').value),
+    limite_adelanto:     parseInt(document.getElementById('p-adelanto').value),
+    tolerancia_tardanza: parseInt(document.getElementById('p-tardanza').value),
+    multiplicador_dobla: parseFloat(document.getElementById('p-dobla').value),
+    alerta_stock_pct:    parseInt(document.getElementById('p-stock').value),
+    alerta_epp_dias:     parseInt(document.getElementById('p-epp').value),
+    nombre_empresa:      document.getElementById('p-empresa').value,
+    ruc:                 document.getElementById('p-ruc').value,
+  })});
+  if(r) showToast('Parámetros guardados','success');
+  else  showToast('Parámetros guardados localmente','warning');
+}
+
+// ── ZONA PELIGROSA ────────────────────────────────────────
+async function confirmarLimpiar(){
+  const conf=prompt('Escribe CONFIRMAR para limpiar datos de prueba:');
+  if(conf!=='CONFIRMAR'){showToast('Operación cancelada','warning');return;}
+  const r=await apiFetch('/dashboard/resumen',{method:'DELETE'});
+  if(r) showToast('Datos de prueba eliminados','success');
+  else  showToast('Error al limpiar','error');
+}
+
+async function confirmarReiniciarPlanilla(){
+  if(!confirm('¿Reiniciar planilla del mes actual? Esta acción no se puede deshacer.')) return;
+  const mes=new Date().getMonth()+1, anio=new Date().getFullYear();
+  const r=await apiFetch(`/planilla/reiniciar?mes=${mes}&anio=${anio}`,{method:'DELETE'});
+  if(r) showToast('Planilla reiniciada','success');
+  else  showToast('Error — la planilla puede estar cerrada','error');
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+function showToast(msg, type='success'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+init();
+</script>
+
+
+<script>
+// ── CONTROL DE ACCESO ─────────────────────────
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor: ['dashboard','tareos','almacen','epps'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const token      = localStorage.getItem('token');
+  const rol        = localStorage.getItem('rol') || 'operario';
+  const tid        = localStorage.getItem('trabajador_id');
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+
+  if(!token && !window.location.pathname.includes('login') && !window.location.pathname.includes('index')){
+    window.location.href = 'login.html'; return;
+  }
+
+  window._rol        = rol;
+  window._tid        = tid ? parseInt(tid) : null;
+  window._esOperario = rol === 'operario';
+  window._permitidos = permitidos;
+
+  // Verificar acceso a esta página
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+
+  // Ocultar nav-items no permitidos
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if(!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+
+  // Ocultar secciones vacías del sidebar
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none');
+    if(visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+</script>
+</body>
+</html>
