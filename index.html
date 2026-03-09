@@ -6,15 +6,33 @@
 <title>Minera Pataz — Sistema Integral</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-base:#0a0a0a; --bg-panel:#111111; --bg-card:#181818; --bg-hover:#1f1f1f;
-    --border:#2a2a2a; --border-bright:#3a3a3a;
-    --orange:#f97316; --orange-dim:#7c3a0e; --orange-glow:rgba(249,115,22,0.15);
-    --text-primary:#f0f0f0; --text-secondary:#888888; --text-muted:#444444;
-    --green:#22c55e; --green-dim:#14532d;
-    --red:#ef4444; --red-dim:#7f1d1d;
-    --yellow:#eab308; --yellow-dim:#713f12;
-    --blue:#3b82f6; --blue-dim:#1e3a8a;
+    :root {
+    --bg-base:     #ECEEF2;
+    --bg-panel:    #FFFFFF;
+    --bg-card:     #F4F5F8;
+    --bg-hover:    #ECEEF2;
+    --border:      #DDE0E8;
+    --border-bright: #C8CDD8;
+    --orange:      #C9960C;
+    --orange-dim:  #FFF8E6;
+    --orange-glow: rgba(201,150,12,0.12);
+    --text-primary: #1A2035;
+    --text-secondary: #4A5568;
+    --text-muted:  #8A95A8;
+    --green:       #1A7A4A;
+    --green-dim:   #E8F5EE;
+    --red:         #B83232;
+    --red-dim:     #FCEAEA;
+    --yellow:      #C9960C;
+    --yellow-dim:  #FFF8E6;
+    --blue:        #1A4A8A;
+    --blue-dim:    #E8EFF8;
+    --sidebar-w:   240px;
+    --bg-sidebar:  #1E2535;
+    --bg-sidebar2: #252D40;
+    --sidebar-text: rgba(255,255,255,0.5);
+    --sidebar-text-active: #C9960C;
+    --sidebar-border: rgba(255,255,255,0.07);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -315,6 +333,8 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
 </style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
 
@@ -463,8 +483,16 @@
         </svg>
       </div>
       <div class="mc-label">Adelantos</div>
-      <div class="mc-desc">Solicitudes de adelanto, aprobaciones y control de permisos.</div>
+      <div class="mc-desc">Solicitudes de adelanto de sueldo y aprobaciones.</div>
       <div class="mc-stat"><span class="mc-stat-val" id="m-adelantos">— pendientes</span><span class="mc-arrow">→</span></div>
+    </a>
+
+    <!-- Permisos -->
+    <a class="module-card mc-blue" href="permisos.html" data-modulo-card="permisos" data-modulo="permisos">
+      <div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="mc-label">Permisos</div>
+      <div class="mc-desc">Solicitudes de permisos laborales, aprobaciones y seguimiento.</div>
+      <div class="mc-stat"><span class="mc-stat-val" id="m-permisos">— pendientes</span><span class="mc-arrow">→</span></div>
     </a>
 
     <!-- Legajo -->
@@ -589,14 +617,14 @@ async function loadDashboard() {
   const resumen = await apiFetch('/dashboard/resumen');
 
   if (resumen) {
-    document.getElementById('hs-trabajadores').textContent = resumen.total_trabajadores   || '—';
-    document.getElementById('hs-presentes').textContent    = resumen.presentes_hoy        || '—';
-    document.getElementById('hs-alertas').textContent      = resumen.alertas_activas       || '0';
-    document.getElementById('m-trabajadores').textContent  = `${resumen.total_trabajadores} activos`;
-    document.getElementById('m-tareos').textContent        = `${resumen.presentes_hoy} presentes hoy`;
-    document.getElementById('m-almacen').textContent       = `${resumen.stock_critico || 0} críticos`;
-    document.getElementById('m-epps').textContent          = `${resumen.epps_vencidos || 0} vencidos`;
-    document.getElementById('m-adelantos').textContent     = `${resumen.adelantos_pendientes || 0} pendientes`;
+    document.getElementById('hs-trabajadores').textContent = resumen.asistencia?.total_trabajadores || '—';
+    document.getElementById('hs-presentes').textContent    = resumen.asistencia?.presentes || '—';
+    document.getElementById('hs-alertas').textContent      = (resumen.epps?.vencidos||0) + (resumen.almacen?.materiales_stock_critico||0);
+    document.getElementById('m-trabajadores').textContent  = `${resumen.asistencia?.total_trabajadores||0} activos`;
+    document.getElementById('m-tareos').textContent        = `${resumen.asistencia?.presentes||0} presentes hoy`;
+    document.getElementById('m-almacen').textContent       = `${resumen.almacen?.materiales_stock_critico||0} críticos`;
+    document.getElementById('m-epps').textContent          = `${resumen.epps?.vencidos||0} vencidos`;
+    document.getElementById('m-adelantos').textContent     = `${resumen.pendientes?.adelantos||0} pendientes`;
   } else {
     // Mock
     document.getElementById('hs-trabajadores').textContent = '3';

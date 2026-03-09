@@ -1,0 +1,62 @@
+/* ── RESPONSIVE GLOBAL — MINERA PATAZ ── */
+
+/* Tablet (max 1024px) */
+@media (max-width: 1024px) {
+  .sidebar { width: 200px; }
+  .main-content { margin-left: 200px; }
+}
+
+/* Mobile/pequeño (max 768px) */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main-content { margin-left: 0 !important; }
+  .topbar { padding: 0 12px; }
+
+  /* Grids de 2 columnas → 1 columna */
+  .catalogos-grid,
+  .stats-grid,
+  .grid-2,
+  .form-grid,
+  .params-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tarjetas de stats */
+  .stat-cards, .kpi-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Tablas: scroll horizontal */
+  .table-wrap, .table-responsive {
+    overflow-x: auto !important;
+  }
+
+  /* Panels full width */
+  .panel { min-width: 0; }
+
+  /* inline-form wrap */
+  .inline-form { flex-wrap: wrap !important; }
+
+  /* Modales full width */
+  .modal-box, .modal-content {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 10px auto !important;
+  }
+
+  /* Topbar título */
+  .page-title { font-size: 16px !important; }
+
+  /* Botones topbar */
+  .topbar-actions { gap: 6px !important; }
+  .topbar-actions .btn span { display: none; }
+}
+
+/* Pantalla muy pequeña (max 480px) */
+@media (max-width: 480px) {
+  .stat-cards, .kpi-row {
+    grid-template-columns: 1fr !important;
+  }
+  .tabs { flex-wrap: wrap; gap: 4px; }
+  .main-tab { font-size: 11px !important; padding: 6px 10px !important; }
+}

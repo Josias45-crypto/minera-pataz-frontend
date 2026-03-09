@@ -6,21 +6,33 @@
 <title>Minera Pataz — Acceso</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-base:    #0a0a0a;
-    --bg-panel:   #111111;
-    --bg-card:    #181818;
-    --border:     #2a2a2a;
-    --border-bright: #3a3a3a;
-    --orange:     #f97316;
-    --orange-dim: #7c3a0e;
-    --orange-glow: rgba(249,115,22,0.2);
-    --text-primary:   #f0f0f0;
-    --text-secondary: #888888;
-    --text-muted:     #444444;
-    --green:  #22c55e;
-    --red:    #ef4444;
-    --red-dim: #7f1d1d;
+    :root {
+    --bg-base:     #ECEEF2;
+    --bg-panel:    #FFFFFF;
+    --bg-card:     #F4F5F8;
+    --bg-hover:    #ECEEF2;
+    --border:      #DDE0E8;
+    --border-bright: #C8CDD8;
+    --orange:      #C9960C;
+    --orange-dim:  #FFF8E6;
+    --orange-glow: rgba(201,150,12,0.12);
+    --text-primary: #1A2035;
+    --text-secondary: #4A5568;
+    --text-muted:  #8A95A8;
+    --green:       #1A7A4A;
+    --green-dim:   #E8F5EE;
+    --red:         #B83232;
+    --red-dim:     #FCEAEA;
+    --yellow:      #C9960C;
+    --yellow-dim:  #FFF8E6;
+    --blue:        #1A4A8A;
+    --blue-dim:    #E8EFF8;
+    --sidebar-w:   240px;
+    --bg-sidebar:  #1E2535;
+    --bg-sidebar2: #252D40;
+    --sidebar-text: rgba(255,255,255,0.5);
+    --sidebar-text-active: #C9960C;
+    --sidebar-border: rgba(255,255,255,0.07);
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
@@ -39,7 +51,7 @@
     width: 55%;
     position: relative;
     overflow: hidden;
-    background: #0d0d0d;
+    background: #1E2535;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -55,7 +67,7 @@
       linear-gradient(var(--border) 1px, transparent 1px),
       linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size: 40px 40px;
-    opacity: 0.4;
+    opacity: 0.15;
   }
 
   /* Gradiente naranja desde abajo */
@@ -66,7 +78,7 @@
     height: 60%;
     background: linear-gradient(
       to top,
-      rgba(249,115,22,0.08) 0%,
+      rgba(201,150,12,0.10) 0%,
       transparent 100%
     );
     pointer-events: none;
@@ -103,6 +115,15 @@
     opacity: 0.3;
   }
 
+  /* Textos claros en panel oscuro izquierdo */
+  .left-panel .left-tag { color: var(--orange); border-color: rgba(201,150,12,0.4); }
+  .left-panel .left-title { color: #FFFFFF; }
+  .left-panel .left-title .highlight { color: var(--orange); }
+  .left-panel .left-desc { color: rgba(255,255,255,0.6); }
+  .left-panel .left-stat .num { color: #FFFFFF; }
+  .left-panel .left-stat .lbl { color: rgba(255,255,255,0.4); }
+  .left-panel .feature-tag { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.15); }
+  .left-panel .deco-number { color: rgba(255,255,255,0.04); }
   .left-content {
     position: relative;
     z-index: 2;
@@ -544,6 +565,8 @@
     line-height: 1.6;
   }
 </style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="responsive.css">
 </head>
 <body>
 
@@ -690,28 +713,6 @@
       <span class="btn-text">Ingresar al sistema</span>
       <div class="spinner"></div>
     </button>
-
-    <!-- Roles rápidos -->
-    <div class="roles-hint">
-      <div class="roles-hint-title">Acceso rápido (demo)</div>
-      <div class="roles-grid">
-        <div class="role-pill" onclick="fillCreds('admin','admin2026')">
-          <div class="role-dot" style="background:#f97316"></div>
-          <span class="rname">Administrador</span>
-        </div>
-        <div class="role-pill" onclick="fillCreds('rrhh','rrhh2026')">
-          <div class="role-dot" style="background:#3b82f6"></div>
-          <span class="rname">RRHH</span>
-        </div>
-        <div class="role-pill" onclick="fillCreds('supervisor','sup2026')">
-          <div class="role-dot" style="background:#22c55e"></div>
-          <span class="rname">Supervisor</span>
-        </div>
-        <div class="role-pill" onclick="fillCreds('almacen','alm2026')">
-          <div class="role-dot" style="background:#eab308"></div>
-          <span class="rname">Almacén</span>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -761,13 +762,7 @@ document.getElementById('username').addEventListener('keydown', e => {
 });
 
 // ── FILL CREDS ─────────────────────────────────────────────
-function fillCreds(user, pass) {
-  document.getElementById('username').value = user;
-  document.getElementById('password').value = pass;
-  document.getElementById('username').classList.remove('error');
-  document.getElementById('password').classList.remove('error');
-  document.getElementById('error-msg').classList.remove('show');
-}
+
 
 // ── SHOW ERROR ─────────────────────────────────────────────
 function showError(msg) {

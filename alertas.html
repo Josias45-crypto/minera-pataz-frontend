@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alertas — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    :root {
+    --bg-base:     #ECEEF2;
+    --bg-panel:    #FFFFFF;
+    --bg-card:     #F4F5F8;
+    --bg-hover:    #ECEEF2;
+    --border:      #DDE0E8;
+    --border-bright: #C8CDD8;
+    --orange:      #C9960C;
+    --orange-dim:  #FFF8E6;
+    --orange-glow: rgba(201,150,12,0.12);
+    --text-primary: #1A2035;
+    --text-secondary: #4A5568;
+    --text-muted:  #8A95A8;
+    --green:       #1A7A4A;
+    --green-dim:   #E8F5EE;
+    --red:         #B83232;
+    --red-dim:     #FCEAEA;
+    --yellow:      #C9960C;
+    --yellow-dim:  #FFF8E6;
+    --blue:        #1A4A8A;
+    --blue-dim:    #E8EFF8;
+    --sidebar-w:   240px;
+    --bg-sidebar:  #1E2535;
+    --bg-sidebar2: #252D40;
+    --sidebar-text: rgba(255,255,255,0.5);
+    --sidebar-text-active: #C9960C;
+    --sidebar-border: rgba(255,255,255,0.07);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; min-height: 100vh;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0;
+    z-index: 50;
+  }
+  .sidebar-logo {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--orange); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: #000; }
+  .logo-text .name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 900;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .logo-text .sub {
+    font-size: 8px; color: var(--text-secondary);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .sidebar-nav { flex: 1; padding: 12px 0; overflow-y: auto; }
+  .sidebar-section {
+    padding: 0 12px; margin-bottom: 4px;
+  }
+  .sidebar-section-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 8px 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 6px;
+    text-decoration: none; color: var(--text-secondary);
+    font-size: 13px; font-weight: 500;
+    transition: all 0.15s; margin-bottom: 1px;
+    cursor: pointer;
+  }
+  .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .nav-item.active { background: var(--orange-glow); color: var(--orange); border: 1px solid var(--orange-dim); }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .sidebar-bottom {
+    padding: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .nav-user {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px; border-radius: 6px;
+    background: var(--bg-card);
+  }
+  .nav-avatar {
+    width: 30px; height: 30px;
+    background: var(--orange-dim); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 800; color: var(--orange);
+    flex-shrink: 0;
+  }
+  .nav-user-info { flex: 1; min-width: 0; }
+  .nav-user-name { font-size: 12px; font-weight: 600; truncate: ellipsis; }
+  .nav-user-rol { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+  .btn-logout-sm {
+    background: none; border: none;
+    color: var(--text-muted); cursor: pointer;
+    padding: 4px; border-radius: 4px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-logout-sm:hover { color: var(--red); }
+
+  /* MAIN */
+  .main {
+    margin-left: 220px;
+    flex: 1; display: flex; flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    height: 52px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 24px; gap: 12px;
+    position: sticky; top: 0; z-index: 40;
+  }
+  .page-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .topbar-right {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+  }
+  .clock {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--text-secondary);
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 5px;
+  }
+
+  /* CONTENT */
+  .content { padding: 24px; flex: 1; }
+
+  /* FILTROS */
+  .filtros {
+    display: flex; gap: 8px; margin-bottom: 20px;
+    flex-wrap: wrap; align-items: center;
+  }
+  .filtro-btn {
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .filtro-btn:hover { border-color: var(--border-bright); color: var(--text-primary); }
+  .filtro-btn.active { background: var(--orange-glow); border-color: var(--orange-dim); color: var(--orange); }
+  .filtro-btn.red.active    { background: rgba(239,68,68,0.1); border-color: var(--red-dim); color: var(--red); }
+  .filtro-btn.yellow.active { background: rgba(234,179,8,0.1); border-color: var(--yellow-dim); color: var(--yellow); }
+  .filtro-btn.orange.active { background: var(--orange-glow); border-color: var(--orange-dim); color: var(--orange); }
+  .filtro-btn.blue.active   { background: rgba(59,130,246,0.1); border-color: var(--blue-dim); color: var(--blue); }
+
+  /* RESUMEN CHIPS */
+  .resumen-chips {
+    display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 16px;
+    flex: 1; min-width: 140px;
+  }
+  .chip-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .chip-dot.red    { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,0.5); animation: pulse 2s infinite; }
+  .chip-dot.yellow { background: var(--yellow); }
+  .chip-dot.orange { background: var(--orange); }
+  .chip-dot.blue   { background: var(--blue); }
+  .chip-dot.green  { background: var(--green); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .chip-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 900; line-height: 1;
+  }
+  .chip-val.red    { color: var(--red); }
+  .chip-val.yellow { color: var(--yellow); }
+  .chip-val.orange { color: var(--orange); }
+  .chip-val.blue   { color: var(--blue); }
+  .chip-val.green  { color: var(--green); }
+  .chip-lbl { font-size: 11px; color: var(--text-secondary); }
+
+  /* ALERTAS LIST */
+  .alertas-container {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .alerta-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.15s;
+    animation: fadeUp 0.3s ease both;
+  }
+  .alerta-item:hover { background: var(--bg-hover); border-color: var(--border-bright); }
+  .alerta-item.critica  { border-left: 3px solid var(--red); }
+  .alerta-item.warning  { border-left: 3px solid var(--yellow); }
+  .alerta-item.info     { border-left: 3px solid var(--orange); }
+  .alerta-item.pendiente{ border-left: 3px solid var(--blue); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .alerta-icon {
+    width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 16px;
+  }
+  .alerta-icon.critica  { background: var(--red-dim); }
+  .alerta-icon.warning  { background: var(--yellow-dim); }
+  .alerta-icon.info     { background: var(--orange-dim); }
+  .alerta-icon.pendiente{ background: var(--blue-dim); }
+
+  .alerta-body { flex: 1; min-width: 0; }
+  .alerta-titulo {
+    font-size: 13px; font-weight: 600; color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+  .alerta-detalle {
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .alerta-meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+    flex-shrink: 0;
+  }
+  .alerta-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 3px;
+    white-space: nowrap;
+  }
+  .alerta-badge.critica  { background: var(--red-dim); color: var(--red); }
+  .alerta-badge.warning  { background: var(--yellow-dim); color: var(--yellow); }
+  .alerta-badge.info     { background: var(--orange-dim); color: var(--orange); }
+  .alerta-badge.pendiente{ background: var(--blue-dim); color: var(--blue); }
+  .alerta-time {
+    font-size: 10px; color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .alerta-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-sm {
+    padding: 4px 10px; border-radius: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-approve { background: var(--green-dim); color: var(--green); }
+  .btn-approve:hover { background: var(--green); color: #000; }
+  .btn-reject  { background: var(--red-dim); color: var(--red); }
+  .btn-reject:hover  { background: var(--red); color: #fff; }
+  .btn-ver { background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-secondary); }
+  .btn-ver:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* EMPTY */
+  .empty {
+    text-align: center; padding: 60px 20px;
+    color: var(--text-muted); font-size: 13px;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 20px 0 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+</style>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="responsive.css">
+</head>
+<body data-modulo="alertas">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="logo-text">
+      <div class="name">Minera Pataz</div>
+      <div class="sub">Sistema Integral</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Principal</div>
+      <a class="nav-item" href="dashboard.html" data-modulo="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Personal</div>
+      <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Trabajadores
+      </a>
+      <a class="nav-item" href="tareos.html" data-modulo="tareos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tareos
+      </a>
+      <a class="nav-item" href="permisos.html" data-modulo="permisos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Permisos
+      </a>
+      <a class="nav-item" href="adelantos.html" data-modulo="adelantos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Adelantos
+      </a>
+      <a class="nav-item" href="legajo.html" data-modulo="legajo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Legajo Digital
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Finanzas</div>
+      <a class="nav-item" href="planilla.html" data-modulo="planilla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Planilla
+      </a>
+    </div>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="nav-user">
+      <div class="nav-avatar" id="nav-avatar">RR</div>
+      <div class="nav-user-info">
+        <div class="nav-user-name" id="nav-user">rrhh</div>
+        <div class="nav-user-rol" id="nav-rol">RRHH</div>
+      </div>
+      <button class="btn-logout-sm" onclick="logout()" title="Cerrar sesión">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="page-title">🔔 Alertas del Sistema</div>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- CHIPS RESUMEN -->
+    <div class="resumen-chips">
+      <div class="chip">
+        <div class="chip-dot red"></div>
+        <div>
+          <div class="chip-val red" id="chip-criticas">0</div>
+          <div class="chip-lbl">Críticas</div>
+        </div>
+      </div>
+      <div class="chip">
+        <div class="chip-dot yellow"></div>
+        <div>
+          <div class="chip-val yellow" id="chip-warnings">0</div>
+          <div class="chip-lbl">Advertencias</div>
+        </div>
+      </div>
+      <div class="chip">
+        <div class="chip-dot blue"></div>
+        <div>
+          <div class="chip-val blue" id="chip-pendientes">0</div>
+          <div class="chip-lbl">Pendientes aprobación</div>
+        </div>
+      </div>
+      <div class="chip">
+        <div class="chip-dot orange"></div>
+        <div>
+          <div class="chip-val orange" id="chip-ausentes">0</div>
+          <div class="chip-lbl">Ausentes sin justificar</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTROS -->
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="filtrar('todas', this)">Todas</button>
+      <button class="filtro-btn red" onclick="filtrar('critica', this)">🔴 Críticas</button>
+      <button class="filtro-btn yellow" onclick="filtrar('warning', this)">🟡 Advertencias</button>
+      <button class="filtro-btn blue" onclick="filtrar('pendiente', this)">🔵 Pendientes</button>
+      <button class="filtro-btn orange" onclick="filtrar('info', this)">🟠 Ausencias</button>
+    </div>
+
+    <!-- LISTA DE ALERTAS -->
+    <div id="alertas-container" class="alertas-container">
+      <div class="empty"><div class="empty-icon">⏳</div>Cargando alertas...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API   = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+
+if (!TOKEN) window.location.href = 'login.html';
+
+let todasAlertas = [];
+let trabajadoresMap = {};
+
+// SIDEBAR usuario
+const u = localStorage.getItem('username') || '';
+const r = localStorage.getItem('rol') || '';
+document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+document.getElementById('nav-user').textContent   = u;
+document.getElementById('nav-rol').textContent    = r.toUpperCase();
+
+// Marcar item activo en sidebar
+document.querySelectorAll('.nav-item').forEach(a => {
+  const page = window.location.pathname.split('/').pop();
+  if (a.getAttribute('href') === page) a.classList.add('active');
+});
+
+// Control de acceso
+(function(){
+  const PERMISOS = {
+    admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion','alertas'],
+    rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo','alertas'],
+    supervisor: ['dashboard','tareos','almacen','epps','alertas'],
+    almacen:    ['dashboard','almacen','epps'],
+    operario:   ['dashboard','tareos','adelantos','permisos'],
+  };
+  const rol = localStorage.getItem('rol') || 'operario';
+  const permitidos = PERMISOS[rol] || [];
+  if (!permitidos.includes('alertas')) {
+    alert('No tienes permiso para acceder a este módulo.');
+    window.location.href = 'index.html'; return;
+  }
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
+    if (!permitidos.includes(a.dataset.modulo)) a.style.display = 'none';
+  });
+  document.querySelectorAll('.sidebar-section').forEach(sec => {
+    const visibles = Array.from(sec.querySelectorAll('.nav-item')).filter(i => i.style.display !== 'none');
+    if (visibles.length === 0) sec.style.display = 'none';
+  });
+})();
+
+function startClock() {
+  function tick() {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('es-PE', { hour12: false });
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+async function apiFetch(path) {
+  try {
+    const r = await fetch(API + path, { headers: { 'Authorization': 'Bearer ' + TOKEN } });
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function apiPatch(path, body) {
+  try {
+    const r = await fetch(API + path, {
+      method: 'PATCH',
+      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
+
+async function cargarTrabajadores() {
+  const data = await apiFetch('/trabajadores/');
+  if (data) data.forEach(t => { trabajadoresMap[t.id] = t.nombres + ' ' + t.apellidos; });
+}
+
+async function cargarAlertas() {
+  const [resumen, adelantos, permisos] = await Promise.all([
+    apiFetch('/dashboard/resumen'),
+    apiFetch('/adelantos/pendientes'),
+    apiFetch('/permisos/pendientes'),
+  ]);
+
+  todasAlertas = [];
+
+  // Ausentes sin justificación
+  if (resumen?.asistencia?.ausentes > 0) {
+    todasAlertas.push({
+      tipo: 'info',
+      icono: '👷',
+      titulo: `${resumen.asistencia.ausentes} trabajador(es) ausente(s) sin justificación`,
+      detalle: 'No registraron entrada hoy y no tienen permiso aprobado',
+      badge: 'Ausencia',
+      tiempo: 'Hoy',
+      accion: null,
+    });
+  }
+
+  // Adelantos pendientes
+  (adelantos || []).forEach(a => {
+    const nombre = trabajadoresMap[a.trabajador_id] || 'Trabajador #' + a.trabajador_id;
+    todasAlertas.push({
+      tipo: 'pendiente',
+      icono: '💰',
+      titulo: `Adelanto pendiente — ${nombre}`,
+      detalle: `Monto: S/. ${parseFloat(a.monto).toFixed(2)} · Motivo: ${a.motivo || '—'}`,
+      badge: 'Adelanto',
+      tiempo: a.fecha_solicitud ? new Date(a.fecha_solicitud).toLocaleDateString('es-PE') : '—',
+      accion: { tipo: 'adelanto', id: a.id },
+    });
+  });
+
+  // Permisos pendientes
+  (permisos || []).forEach(p => {
+    const nombre = trabajadoresMap[p.trabajador_id] || 'Trabajador #' + p.trabajador_id;
+    todasAlertas.push({
+      tipo: 'pendiente',
+      icono: '📋',
+      titulo: `Permiso pendiente — ${nombre}`,
+      detalle: `Tipo: ${p.tipo_permiso || '—'} · Motivo: ${p.motivo || '—'}`,
+      badge: 'Permiso',
+      tiempo: p.fecha_inicio ? new Date(p.fecha_inicio).toLocaleDateString('es-PE') : '—',
+      accion: { tipo: 'permiso', id: p.id },
+    });
+  });
+
+  // EPPs vencidos
+  if (resumen?.epps?.vencidos > 0) {
+    todasAlertas.push({
+      tipo: 'critica',
+      icono: '⛑️',
+      titulo: `${resumen.epps.vencidos} EPP(s) vencido(s)`,
+      detalle: 'Equipos de protección que han superado su fecha de vencimiento',
+      badge: 'EPP Vencido',
+      tiempo: 'Urgente',
+      accion: null,
+      link: 'epps.html',
+    });
+  }
+
+  // EPPs por vencer
+  if (resumen?.epps?.por_vencer_15_dias > 0) {
+    todasAlertas.push({
+      tipo: 'warning',
+      icono: '⚠️',
+      titulo: `${resumen.epps.por_vencer_15_dias} EPP(s) por vencer en 15 días`,
+      detalle: 'Equipos de protección próximos a su fecha de vencimiento',
+      badge: '15 días',
+      tiempo: 'Próximo',
+      accion: null,
+      link: 'epps.html',
+    });
+  }
+
+  // Documentos por vencer — detalle individual
+  const docsVencer = await apiFetch('/legajo/por-vencer');
+  (docsVencer || []).forEach(d => {
+    const tipos = { examen_medico:'Examen médico', contrato:'Contrato', sctr:'SCTR' };
+    const tipoLabel = tipos[d.tipo] || d.tipo;
+    todasAlertas.push({
+      tipo: d.dias_restantes <= 10 ? 'critica' : 'warning',
+      icono: '📄',
+      titulo: `${d.trabajador_nombre} — ${tipoLabel} por vencer`,
+      detalle: `Vence el ${new Date(d.fecha_vencimiento).toLocaleDateString('es-PE')} · ${d.dias_restantes} día(s) restantes`,
+      badge: `${d.dias_restantes} días`,
+      tiempo: 'Próximo',
+      accion: null,
+      link: `legajo.html?trabajador_id=${d.trabajador_id}`,
+    });
+  });
+
+  // Stock crítico
+  if (resumen?.almacen?.materiales_stock_critico > 0) {
+    todasAlertas.push({
+      tipo: 'critica',
+      icono: '📦',
+      titulo: `${resumen.almacen.materiales_stock_critico} material(es) en stock crítico`,
+      detalle: 'Materiales con stock por debajo del mínimo configurado',
+      badge: 'Stock Crítico',
+      tiempo: 'Urgente',
+      accion: null,
+      link: 'almacen.html',
+    });
+  }
+
+  // Herramientas sin devolver
+  if (resumen?.almacen?.herramientas_sin_devolver > 0) {
+    todasAlertas.push({
+      tipo: 'warning',
+      icono: '🔧',
+      titulo: `${resumen.almacen.herramientas_sin_devolver} herramienta(s) sin devolver`,
+      detalle: 'Herramientas prestadas con fecha de devolución vencida',
+      badge: 'Préstamo',
+      tiempo: 'Pendiente',
+      accion: null,
+      link: 'almacen.html',
+    });
+  }
+
+  // Actualizar chips
+  document.getElementById('chip-criticas').textContent  = todasAlertas.filter(a=>a.tipo==='critica').length;
+  document.getElementById('chip-warnings').textContent  = todasAlertas.filter(a=>a.tipo==='warning').length;
+  document.getElementById('chip-pendientes').textContent= todasAlertas.filter(a=>a.tipo==='pendiente').length;
+  document.getElementById('chip-ausentes').textContent  = todasAlertas.filter(a=>a.tipo==='info').length;
+
+  renderAlertas(todasAlertas);
+}
+
+function renderAlertas(lista) {
+  const cont = document.getElementById('alertas-container');
+  if (!lista.length) {
+    cont.innerHTML = `<div class="empty"><div class="empty-icon">✅</div>Sin alertas activas — todo en orden</div>`;
+    return;
+  }
+
+  // Agrupar por sección
+  const criticas  = lista.filter(a=>a.tipo==='critica');
+  const pendientes= lista.filter(a=>a.tipo==='pendiente');
+  const warnings  = lista.filter(a=>a.tipo==='warning');
+  const info      = lista.filter(a=>a.tipo==='info');
+
+  let html = '';
+
+  if (criticas.length) {
+    html += `<div class="section-label">🔴 Críticas (${criticas.length})</div>`;
+    html += criticas.map(renderItem).join('');
+  }
+  if (pendientes.length) {
+    html += `<div class="section-label">🔵 Pendientes de aprobación (${pendientes.length})</div>`;
+    html += pendientes.map(renderItem).join('');
+  }
+  if (warnings.length) {
+    html += `<div class="section-label">🟡 Advertencias (${warnings.length})</div>`;
+    html += warnings.map(renderItem).join('');
+  }
+  if (info.length) {
+    html += `<div class="section-label">🟠 Información (${info.length})</div>`;
+    html += info.map(renderItem).join('');
+  }
+
+  cont.innerHTML = html;
+}
+
+function renderItem(a, i) {
+  const acciones = a.accion
+    ? `<div class="alerta-actions">
+        <button class="btn-sm btn-approve" onclick="aprobar('${a.accion.tipo}',${a.accion.id})">✓ Aprobar</button>
+        <button class="btn-sm btn-reject"  onclick="rechazar('${a.accion.tipo}',${a.accion.id})">✗ Rechazar</button>
+       </div>`
+    : a.link
+      ? `<div class="alerta-actions"><a class="btn-sm btn-ver" href="${a.link}">Ver →</a></div>`
+      : '';
+
+  return `
+    <div class="alerta-item ${a.tipo}" style="animation-delay:${i*0.04}s">
+      <div class="alerta-icon ${a.tipo}">${a.icono}</div>
+      <div class="alerta-body">
+        <div class="alerta-titulo">${a.titulo}</div>
+        <div class="alerta-detalle">${a.detalle}</div>
+      </div>
+      <div class="alerta-meta">
+        <span class="alerta-badge ${a.tipo}">${a.badge}</span>
+        <span class="alerta-time">${a.tiempo}</span>
+      </div>
+      ${acciones}
+    </div>`;
+}
+
+function filtrar(tipo, btn) {
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tipo === 'todas') renderAlertas(todasAlertas);
+  else renderAlertas(todasAlertas.filter(a => a.tipo === tipo));
+}
+
+async function aprobar(tipo, id) {
+  const url = tipo === 'adelanto' ? `/adelantos/${id}/resolver` : `/permisos/${id}/resolver`;
+  const ok = await apiPatch(url, { aprobado: true });
+  if (ok) { await cargarAlertas(); } else alert('Error al aprobar');
+}
+
+async function rechazar(tipo, id) {
+  const motivo = prompt('Motivo del rechazo:');
+  if (!motivo) return;
+  const url = tipo === 'adelanto' ? `/adelantos/${id}/resolver` : `/permisos/${id}/resolver`;
+  const ok = await apiPatch(url, { aprobado: false, motivo_rechazo: motivo });
+  if (ok) { await cargarAlertas(); } else alert('Error al rechazar');
+}
+
+function logout() {
+  if (!confirm('¿Cerrar sesión?')) return;
+  ['token','username','rol','trabajador_id'].forEach(k => localStorage.removeItem(k));
+  window.location.href = 'login.html';
+}
+
+async function init() {
+  startClock();
+  await cargarTrabajadores();
+  await cargarAlertas();
+}
+
+init();
+</script>
+</body>
+</html>
