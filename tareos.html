@@ -463,9 +463,10 @@
               <option value="9">Setiembre</option><option value="10">Octubre</option>
               <option value="11">Noviembre</option><option value="12">Diciembre</option>
             </select>
-            <select class="filter-select" id="sel-anio">
-              <option value="2026" selected>2026</option><option value="2025">2025</option>
-            </select>
+            <select class="filter-select" id="sel-anio"></select>
+
+
+
             <button class="btn btn-ghost btn-sm" onclick="loadMes()">Buscar</button>
           </div>
           <div class="table-wrap">
@@ -641,6 +642,16 @@ function cerrarSugerencias() {
 // ── INIT ──────────────────────────────────────────────────
 async function init() {
   const u = localStorage.getItem('username') || 'admin';
+  // Generar años dinámicamente
+  const selAnio = document.getElementById("sel-anio");
+  selAnio.innerHTML = "";
+  const anioActual = new Date().getFullYear();
+  for (let y = anioActual; y >= 2024; y--) {
+    const opt = document.createElement("option");
+    opt.value = y; opt.textContent = y;
+    if (y === anioActual) opt.selected = true;
+    selAnio.appendChild(opt);
+  }
   const r = localStorage.getItem('rol')      || 'admin';
   document.getElementById('nav-user').textContent   = u;
   document.getElementById('nav-rol').textContent    = r;
@@ -684,7 +695,7 @@ async function loadData() {
 
 function updateStats() {
   const total     = trabajadores.length;
-  const presentes = asistenciasHoy.filter(a => a.estado === 'asistio' && !a.es_dobla).length;
+  const presentes = asistenciasHoy.filter(a => a.estado === 'asistio' || a.estado === 'dobla').length;
   const doblas    = asistenciasHoy.filter(a => a.es_dobla).length;
   const permisos  = asistenciasHoy.filter(a => a.estado === 'permiso').length;
   const ausentes  = Math.max(0, total - presentes - doblas - permisos);
@@ -732,7 +743,7 @@ function renderTablaHoy(lista) {
     return `<tr>
       <td>${nombre}</td>
       <td class="mono">${fc}</td>
-      <td>${a.turno_id === 3 ? 'Noche' : 'Día'}</td>
+      <td>${a.turno_id === 2 ? 'Noche' : 'Día'}</td>
       <td class="mono">${a.hora_entrada || '—'}</td>
       <td>${a.tardanza_minutos > 0 ? `<span class="badge red">${a.tardanza_minutos} min</span>` : '—'}</td>
       <td>${metodoMap[a.metodo_registro] || a.metodo_registro || '—'}</td>
