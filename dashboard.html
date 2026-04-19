@@ -975,10 +975,11 @@ setInterval(updateClock, 1000);
 updateClock();
 
 // ── API CALL ──────────────────────────────────────────────
-async function apiFetch(path) {
+async function apiFetch(path, opts = {}) {
   try {
     const r = await fetch(API + path, {
-      headers: { 'Authorization': 'Bearer ' + TOKEN }
+      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json', ...opts.headers },
+      ...opts
     });
     if (!r.ok) throw new Error(r.status);
     return await r.json();

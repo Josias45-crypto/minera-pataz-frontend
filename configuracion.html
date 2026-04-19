@@ -292,7 +292,7 @@
           </div>
           <div class="inline-form">
             <input type="text" class="form-input" id="f-cargo" placeholder="Nuevo cargo...">
-            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('cargos','f-cargo','tbody-cargos','cnt-cargos')">+ Agregar</button>
+            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('catalogos/cargos','f-cargo','tbody-cargos','cnt-cargos')">+ Agregar</button>
           </div>
         </div>
 
@@ -310,7 +310,7 @@
           </div>
           <div class="inline-form">
             <input type="text" class="form-input" id="f-area" placeholder="Nueva área...">
-            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('areas','f-area','tbody-areas','cnt-areas')">+ Agregar</button>
+            <button class="btn btn-primary btn-sm" onclick="agregarCatalogo('catalogos/areas','f-area','tbody-areas','cnt-areas')">+ Agregar</button>
           </div>
         </div>
 
@@ -586,7 +586,7 @@ async function guardarPassword(id){
   const p2=document.getElementById('f-pass2').value;
   if(!p1||p1.length<6){showToast('Mínimo 6 caracteres','error');return;}
   if(p1!==p2){showToast('Las contraseñas no coinciden','error');return;}
-  const r=await apiFetch(`/auth/usuarios/${id}/desbloquear`,{method:'PATCH'});
+  const r=await apiFetch(`/auth/usuarios/${id}/password`,{method:'PATCH',body:JSON.stringify({password:p1})});
   if(r){showToast('Contraseña actualizada','success');closeModal();}
   else showToast('Error al cambiar contraseña','error');
 }
@@ -666,7 +666,7 @@ function renderCatalogo(data, tbodyId, cntId, rowFn){
 async function agregarCatalogo(endpoint, inputId, tbodyId, cntId){
   const nombre=document.getElementById(inputId).value.trim();
   if(!nombre){showToast('Escribe un nombre','error');return;}
-  const r=await apiFetch(`/catalogos/${endpoint}`,{method:'POST',body:JSON.stringify({nombre})});
+  const r=await apiFetch(`/${endpoint}`,{method:'POST',body:JSON.stringify({nombre})});
   if(r){
     showToast('Agregado correctamente','success');
     document.getElementById(inputId).value='';
@@ -697,22 +697,22 @@ async function agregarTipoPermiso(){
   const nombre=document.getElementById('f-tipo-perm').value.trim();
   const goce=document.getElementById('f-goce').value;
   if(!nombre){showToast('Escribe un nombre','error');return;}
-  const r=await apiFetch('/permisos/tipos',{method:'POST',body:JSON.stringify({nombre,tipo_goce:goce})});
+  const r=await apiFetch('/permisos/tipos',{method:'POST',body:JSON.stringify({nombre,con_goce:goce==='con_goce'})});
   if(r){showToast('Tipo agregado','success');document.getElementById('f-tipo-perm').value='';await loadCatalogos();}
   else showToast('Error al agregar','error');
 }
 
 async function eliminarCatalogo(endpoint, id, tbodyId, cntId){
   if(!confirm('¿Eliminar este registro?')) return;
-  const r=await apiFetch(`/catalogos/${endpoint}/${id}`,{method:'DELETE'});
+  const r=await apiFetch(`/${endpoint}/${id}`,{method:'DELETE'});
   if(r!==null){showToast('Eliminado','success');await loadCatalogos();}
   else showToast('No se puede eliminar — tiene registros asociados','error');
 }
 
 // ── PERMISOS ──────────────────────────────────────────────
 async function loadPermisos(){
-  const data=await apiFetch('/auth/me');
-  const roles=['admin','rrhh','supervisor','almacen'];
+  const data=await apiFetch('/auth/permisos');
+  const roles=['admin','rrhh','supervisor','almacen','operario'];
   const modulos=[
     {key:'trabajadores', label:'Trabajadores'},
     {key:'tareos',       label:'Tareos'},
@@ -732,12 +732,13 @@ async function loadPermisos(){
     rrhh:        {trabajadores:true,tareos:true,planilla:true,almacen:false,epps:true,adelantos:true,permisos:true,legajo:true,reportes:true,configuracion:false},
     supervisor:  {trabajadores:false,tareos:true,planilla:false,almacen:true,epps:true,adelantos:false,permisos:false,legajo:false,reportes:false,configuracion:false},
     almacen:     {trabajadores:false,tareos:false,planilla:false,almacen:true,epps:true,adelantos:false,permisos:false,legajo:false,reportes:false,configuracion:false},
+    operario:    {trabajadores:false,tareos:false,planilla:false,almacen:false,epps:false,adelantos:false,permisos:false,legajo:false,reportes:false,configuracion:false},
   };
 
   const grid=document.getElementById('permisos-grid');
   grid.innerHTML=roles.map(rol=>`
     <div class="permiso-card">
-      <div class="permiso-title">${{admin:'Administrador',rrhh:'RRHH',supervisor:'Supervisor',almacen:'Almacén'}[rol]||rol}</div>
+      <div class="permiso-title">${{admin:'Administrador',rrhh:'RRHH',supervisor:'Supervisor',almacen:'Almacén',operario:'Operario'}[rol]||rol}</div>
       ${modulos.map(m=>{
         const on=permisosData[rol]?.[m.key]!==false;
         return `<div class="permiso-item">
@@ -759,14 +760,14 @@ function togglePerm(rol, modulo, btn){
 }
 
 async function guardarPermisos(){
-  const r=await apiFetch('/auth/me',{method:'POST',body:JSON.stringify(permisosData)});
+  const r=await apiFetch('/auth/permisos',{method:'POST',body:JSON.stringify(permisosData)});
   if(r) showToast('Permisos guardados','success');
-  else  showToast('Permisos guardados localmente (API no disponible)','warning');
+  else  showToast('Error al guardar permisos','error');
 }
 
 // ── PARÁMETROS ────────────────────────────────────────────
 async function loadParametros(){
-  const data=await apiFetch('/dashboard/resumen');
+  const data=await apiFetch('/dashboard/parametros');
   if(data){
     document.getElementById('p-dias').value     = data.dias_laborables||26;
     document.getElementById('p-adelanto').value = data.limite_adelanto||50;
@@ -780,7 +781,7 @@ async function loadParametros(){
 }
 
 async function guardarParametros(){
-  const r=await apiFetch('/dashboard/resumen',{method:'POST',body:JSON.stringify({
+  const r=await apiFetch('/dashboard/parametros',{method:'POST',body:JSON.stringify({
     dias_laborables:     parseInt(document.getElementById('p-dias').value),
     limite_adelanto:     parseInt(document.getElementById('p-adelanto').value),
     tolerancia_tardanza: parseInt(document.getElementById('p-tardanza').value),
@@ -791,15 +792,15 @@ async function guardarParametros(){
     ruc:                 document.getElementById('p-ruc').value,
   })});
   if(r) showToast('Parámetros guardados','success');
-  else  showToast('Parámetros guardados localmente','warning');
+  else  showToast('Error al guardar parámetros','error');
 }
 
 // ── ZONA PELIGROSA ────────────────────────────────────────
 async function confirmarLimpiar(){
   const conf=prompt('Escribe CONFIRMAR para limpiar datos de prueba:');
   if(conf!=='CONFIRMAR'){showToast('Operación cancelada','warning');return;}
-  const r=await apiFetch('/dashboard/resumen',{method:'DELETE'});
-  if(r) showToast('Datos de prueba eliminados','success');
+  const r=await apiFetch('/dashboard/datos-prueba',{method:'DELETE'});
+  if(r) showToast(`Limpieza completada — ${r.intentos_marcado_eliminados} intentos y ${r.planillas_borrador_eliminadas} planillas borrador eliminadas`,'success');
   else  showToast('Error al limpiar','error');
 }
 
@@ -807,8 +808,8 @@ async function confirmarReiniciarPlanilla(){
   if(!confirm('¿Reiniciar planilla del mes actual? Esta acción no se puede deshacer.')) return;
   const mes=new Date().getMonth()+1, anio=new Date().getFullYear();
   const r=await apiFetch(`/planilla/reiniciar?mes=${mes}&anio=${anio}`,{method:'DELETE'});
-  if(r) showToast('Planilla reiniciada','success');
-  else  showToast('Error — la planilla puede estar cerrada','error');
+  if(r) showToast('Planilla reiniciada correctamente','success');
+  else  showToast('Error — la planilla puede estar cerrada o no existe','error');
 }
 
 // ── HELPERS ───────────────────────────────────────────────

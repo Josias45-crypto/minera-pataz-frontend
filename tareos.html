@@ -34,16 +34,27 @@
     --sidebar-text-active: #C9960C;
     --sidebar-border: rgba(255,255,255,0.07);
   }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background: var(--bg-base);
-    color: var(--text-primary);
-    font-family: 'Barlow', sans-serif;
-    min-height: 100vh; display: flex;
-  }
-
-
-  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+  .sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .logo-icon svg{width:20px;height:20px;fill:#000;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;}
+  .logo-text .sub{font-size:10px;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;}
+  .sidebar-section{padding:8px 0;border-bottom:1px solid var(--border);}
+  .sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);padding:10px 16px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:var(--text-secondary);font-size:13px;font-weight:500;}
+  .nav-item:hover{background:var(--bg-hover);color:var(--text-primary);border-left-color:var(--border-bright);}
+  .nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+  .nav-item .icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid var(--border);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);}
+  .user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;flex-shrink:0;}
+  .user-info .uname{font-size:12px;font-weight:600;color:var(--text-primary);}
+  .user-info .urole{font-size:10px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;}
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
   .topbar {
     height: 52px; background: var(--bg-panel); border-bottom: 1px solid var(--border);
     display: flex; align-items: center; padding: 0 24px; gap: 12px;
@@ -340,54 +351,40 @@
 
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
     <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Principal</div>
-    <a class="nav-item" href="dashboard.html" data-modulo="dashboard">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Dashboard
-    </a>
+    <a class="nav-item" href="index.html" data-modulo="inicio"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Inicio</a>
+    <a class="nav-item" href="dashboard.html" data-modulo="dashboard"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dashboard</a>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Personal</div>
-    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-      Trabajadores
-    </a>
-    <a class="nav-item active" href="tareos.html" data-modulo="tareos">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Tareos
-    </a>
-    <a class="nav-item" href="permisos.html" data-modulo="permisos">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Permisos
-    </a>
-    <a class="nav-item" href="adelantos.html" data-modulo="adelantos">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Adelantos
-    </a>
-    <a class="nav-item" href="legajo.html" data-modulo="legajo">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-      Legajo Digital
-    </a>
+    <a class="nav-item" href="trabajadores.html" data-modulo="trabajadores"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Trabajadores</a>
+    <a class="nav-item active" href="tareos.html" data-modulo="tareos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Tareos</a>
+    <a class="nav-item" href="permisos.html" data-modulo="permisos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Permisos</a>
+    <a class="nav-item" href="adelantos.html" data-modulo="adelantos"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Adelantos</a>
+    <a class="nav-item" href="legajo.html" data-modulo="legajo"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Legajo Digital</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="almacen.html" data-modulo="almacen"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>Almacén</a>
+    <a class="nav-item" href="epps.html" data-modulo="epps"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>EPPs</a>
   </div>
   <div class="sidebar-section">
     <div class="sidebar-label">Finanzas</div>
-    <a class="nav-item" href="planilla.html" data-modulo="planilla">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Planilla
-    </a>
+    <a class="nav-item" href="planilla.html" data-modulo="planilla"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Planilla</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item" href="configuracion.html" data-modulo="configuracion"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Configuración</a>
   </div>
   <div class="sidebar-bottom">
     <div class="user-card">
-      <div class="user-avatar" id="nav-avatar">AD</div>
-      <div class="user-info">
-        <div class="uname" id="nav-user">—</div>
-        <div class="urole" id="nav-rol">—</div>
-      </div>
-      <button onclick="cerrarSesion()" title="Cerrar sesión" style="margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:4px 6px;cursor:pointer;color:rgba(255,255,255,0.4);transition:all 0.15s;">
+      <div class="user-avatar" id="nav-avatar">—</div>
+      <div class="user-info"><div class="uname" id="nav-user">—</div><div class="urole" id="nav-rol">—</div></div>
+      <button onclick="cerrarSesion()" title="Cerrar sesión" style="margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 6px;cursor:pointer;color:var(--text-secondary);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </div>
@@ -403,7 +400,7 @@
       EN VIVO
     </div>
     <div style="margin-left:auto;display:flex;gap:8px">
-      <button class="btn btn-ghost btn-sm" onclick="openManual()">
+      <button id="btn-manual" class="btn btn-ghost btn-sm" onclick="openManual()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Registrar Manual
       </button>
@@ -605,7 +602,7 @@ async function apiFetch(path, opts = {}) {
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────
 async function cargarTrabajadoresLista() {
-  const data = await apiFetch('/trabajadores?activo=true&limit=200');
+  const data = await apiFetch('/trabajadores/?solo_activos=true');
   if (data) trabajadoresList = data;
 }
 
@@ -641,7 +638,6 @@ function cerrarSugerencias() {
 
 // ── INIT ──────────────────────────────────────────────────
 async function init() {
-  const u = localStorage.getItem('username') || 'admin';
   // Generar años dinámicamente
   const selAnio = document.getElementById("sel-anio");
   selAnio.innerHTML = "";
@@ -652,10 +648,6 @@ async function init() {
     if (y === anioActual) opt.selected = true;
     selAnio.appendChild(opt);
   }
-  const r = localStorage.getItem('rol')      || 'admin';
-  document.getElementById('nav-user').textContent   = u;
-  document.getElementById('nav-rol').textContent    = r;
-  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
 
   const hoy = new Date();
   document.getElementById('fecha-hoy').textContent =
@@ -669,7 +661,7 @@ async function init() {
 
 // ── TRABAJADORES ──────────────────────────────────────────
 async function loadTrabajadores() {
-  const data = await apiFetch('/trabajadores?activo=true&limit=200');
+  const data = await apiFetch('/trabajadores/?solo_activos=true');
   trabajadores = data || [];
   ['sel-trabajador-mes','m-trabajador'].forEach(id => {
     const sel = document.getElementById(id);
@@ -869,12 +861,48 @@ function showToast(msg, type = 'success') {
   setTimeout(() => t.remove(), 3000);
 }
 
-function cerrarSesion() {
-  localStorage.clear();
-  window.location.href = 'login.html';
-}
-
 init();
+</script>
+
+<script>
+(function(){
+  const PERMISOS = {
+    admin:['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
+    rrhh:['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
+    supervisor:['dashboard','tareos','almacen','epps'],
+    almacen:['dashboard','almacen','epps'],
+    operario:['dashboard','tareos','adelantos','permisos'],
+  };
+  const token = localStorage.getItem('token');
+  const rol   = localStorage.getItem('rol') || 'operario';
+  const permitidos = PERMISOS[rol] || PERMISOS['operario'];
+  if(!token){ window.location.href='login.html'; return; }
+  const modulo = document.body.dataset.modulo;
+  if(modulo && !permitidos.includes(modulo)){ alert('No tienes permiso para acceder a este módulo.'); window.location.href='index.html'; return; }
+  document.querySelectorAll('.nav-item[data-modulo]').forEach(a=>{ if(!permitidos.includes(a.dataset.modulo)) a.style.display='none'; });
+  document.querySelectorAll('.sidebar-section').forEach(sec=>{ const v=Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none'); if(v.length===0) sec.style.display='none'; });
+  // Ocultar "Registrar Manual" para operarios — el backend rechazaría de todas formas
+  if(rol === 'operario'){
+    const btnManual = document.getElementById('btn-manual');
+    if(btnManual) btnManual.style.display = 'none';
+  }
+})();
+</script>
+
+<script>
+(function(){
+  const u = localStorage.getItem('username')||'—';
+  const r = localStorage.getItem('rol')||'—';
+  const av = document.getElementById('nav-avatar');
+  const nu = document.getElementById('nav-user');
+  const nr = document.getElementById('nav-rol');
+  if(av) av.textContent = u.slice(0,2).toUpperCase();
+  if(nu) nu.textContent = u;
+  if(nr) nr.textContent = r.charAt(0).toUpperCase()+r.slice(1);
+  const current = window.location.pathname.split('/').pop();
+  document.querySelectorAll('.nav-item').forEach(a=>{ if(a.getAttribute('href')===current) a.classList.add('active'); else a.classList.remove('active'); });
+})();
+function cerrarSesion(){ localStorage.clear(); window.location.href='login.html'; }
 </script>
 </body>
 </html>

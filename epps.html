@@ -343,30 +343,37 @@ async function loadTipos(){
 }
 
 async function loadTrabajadores(){
-  const data=await apiFetch('/trabajadores/?activo=false');
+  const data=await apiFetch('/trabajadores/?solo_activos=true');
   trabajadores=data||[{id:1,nombres:'Juan Carlos',apellidos:'Quispe Mamani'},{id:2,nombres:'Carlos Ramón',apellidos:'Medina Flores'},{id:3,nombres:'Rosa Lucía',apellidos:'Torres Vega'}];
 }
 
 async function loadEntregas(){
-  const data=await apiFetch('/epps/por-vencer');
-  entregas=data||[
-    {id:1,trabajador_id:1,tipo_epp_id:1,fecha_entrega:'2026-03-02',fecha_vencimiento:'2031-03-02',talla:null,vigente:true},
-    {id:2,trabajador_id:2,tipo_epp_id:2,fecha_entrega:'2026-01-01',fecha_vencimiento:'2026-04-01',talla:'42',vigente:true},
+  // GET /epps/ devuelve todas las entregas; filtramos vigentes y vencidas
+  const [vigentesData, vencidosData] = await Promise.all([
+    apiFetch('/epps/?estado=vigente'),
+    apiFetch('/epps/?estado=vencido'),
+  ]);
+
+  const fallback=[
+    {id:1,trabajador_id:1,tipo_epp_id:1,fecha_entrega:'2026-03-02',fecha_vencimiento:'2031-03-02',talla:null,estado:'vigente'},
+    {id:2,trabajador_id:2,tipo_epp_id:2,fecha_entrega:'2026-01-01',fecha_vencimiento:'2026-04-01',talla:'42',estado:'vigente'},
   ];
+
+  entregas=[...(vigentesData||fallback), ...(vencidosData||[])];
 
   const hoy=new Date();
   const en15=new Date();en15.setDate(en15.getDate()+15);
 
-  let vigentes=0,porVencer=0,vencidos=0;
+  let cntVigentes=0,porVencer=0,cntVencidos=0;
   entregas.forEach(e=>{
     const venc=new Date(e.fecha_vencimiento);
-    if(venc<hoy) vencidos++;
+    if(venc<hoy) cntVencidos++;
     else if(venc<=en15) porVencer++;
-    else vigentes++;
+    else cntVigentes++;
   });
-  document.getElementById('s-vigentes').textContent=vigentes;
+  document.getElementById('s-vigentes').textContent=cntVigentes;
   document.getElementById('s-por-vencer').textContent=porVencer;
-  document.getElementById('s-vencidos').textContent=vencidos;
+  document.getElementById('s-vencidos').textContent=cntVencidos;
 
   renderEntregas(entregas);
   renderPorVencer();
@@ -404,7 +411,7 @@ function renderEntregas(data){
         </div>
       </td>
       <td>${badge}</td>
-      <td><div class="row-actions"><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Reemplazar</button></div></td>
+      <td><div class="row-actions"><button class="action-btn" onclick="openModalReemplazar(${e.id},${e.trabajador_id})">Reemplazar</button></div></td>
     </tr>`;
   }).join('');
 }
@@ -436,7 +443,7 @@ function renderPorVencer(){
       <td>${tipo?tipo.nombre:`#${e.tipo_epp_id}`}</td>
       <td class="mono" style="color:var(--yellow)">${e.fecha_vencimiento}</td>
       <td><span class="badge yellow">${dias} días</span></td>
-      <td><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Entregar nuevo</button></td>
+      <td><button class="action-btn" onclick="openModalReemplazar(${e.id},${e.trabajador_id})">Entregar nuevo</button></td>
     </tr>`;
   }).join('');
 }
@@ -455,7 +462,7 @@ function renderVencidos(){
       <td>${tipo?tipo.nombre:`#${e.tipo_epp_id}`}</td>
       <td class="mono" style="color:var(--red)">${e.fecha_vencimiento}</td>
       <td><span class="badge red">${dias} días</span></td>
-      <td><button class="action-btn" onclick="openModal('entrega',${e.trabajador_id})">Reemplazar urgente</button></td>
+      <td><button class="action-btn" onclick="openModalReemplazar(${e.id},${e.trabajador_id})">Reemplazar urgente</button></td>
     </tr>`;
   }).join('');
 }
@@ -519,7 +526,7 @@ async function guardarEntrega(){
   const eppId=document.getElementById('f-tipo').value;
   const fecha=document.getElementById('f-fecha').value;
   if(!tid||!eppId||!fecha){showToast('Completa los campos obligatorios','error');return;}
-  const r=await apiFetch('/epps/por-vencer',{method:'POST',body:JSON.stringify({
+  const r=await apiFetch('/epps/entregar',{method:'POST',body:JSON.stringify({
     trabajador_id:parseInt(tid),tipo_epp_id:parseInt(eppId),
     fecha_entrega:fecha,talla:document.getElementById('f-talla')?.value||null,
     observacion:document.getElementById('f-obs').value||null,
@@ -539,6 +546,35 @@ async function guardarTipo(){
   })});
   if(r){showToast('Tipo de EPP creado','success');closeModal();await loadTipos();}
   else showToast('Error al crear tipo','error');
+}
+
+function openModalReemplazar(entregaId, trabajadorId){
+  const t=trabajadores.find(x=>x.id===trabajadorId);
+  const nombre=t?`${t.apellidos}, ${t.nombres}`:`Trabajador #${trabajadorId}`;
+  const entrega=entregas.find(x=>x.id===entregaId);
+  const tipo=entrega?tipos.find(x=>x.id===entrega.tipo_epp_id):null;
+  document.getElementById('modal-title').textContent='Reemplazar EPP';
+  document.getElementById('modal-body').innerHTML=`
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">
+      <strong>${nombre}</strong> — ${tipo?tipo.nombre:'EPP #'+entregaId}
+    </div>
+    <div class="form-group"><label class="form-label">Motivo del reemplazo *</label>
+      <input type="text" class="form-input" id="f-motivo-remp" placeholder="Ej: Vencimiento, deterioro, pérdida..."></div>
+    <div class="form-group"><label class="form-label">Nueva talla (si aplica)</label>
+      <input type="text" class="form-input" id="f-talla-remp" placeholder="40, M, L..."></div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="guardarReemplazo(${entregaId})">Confirmar reemplazo</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function guardarReemplazo(entregaId){
+  const motivo=document.getElementById('f-motivo-remp').value.trim();
+  const talla =document.getElementById('f-talla-remp').value.trim()||null;
+  if(!motivo){showToast('El motivo es obligatorio','error');return;}
+  const r=await apiFetch(`/epps/${entregaId}/reemplazar`,{method:'PATCH',body:JSON.stringify({motivo_reemplazo:motivo,talla})});
+  if(r){showToast('EPP reemplazado correctamente','success');closeModal();await loadEntregas();}
+  else showToast('Error al reemplazar — verifica que el EPP esté vigente','error');
 }
 
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}

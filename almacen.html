@@ -474,7 +474,7 @@ async function loadCategorias() {
 }
 
 async function loadTrabajadores() {
-  const data = await apiFetch('/trabajadores/?activo=true');
+  const data = await apiFetch('/trabajadores/?solo_activos=true');
   trabajadores = data || [{id:1,nombres:'Juan Carlos',apellidos:'Quispe Mamani',fotocheck_codigo:'FC-001'}];
 }
 

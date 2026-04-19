@@ -442,6 +442,7 @@ if (!TOKEN) window.location.href = 'login.html';
 
 let todasAlertas = [];
 let trabajadoresMap = {};
+let tiposPermisoMap = {};
 
 // SIDEBAR usuario
 const u = localStorage.getItem('username') || '';
@@ -468,7 +469,6 @@ document.querySelectorAll('.nav-item').forEach(a => {
   const rol = localStorage.getItem('rol') || 'operario';
   const permitidos = PERMISOS[rol] || [];
   if (!permitidos.includes('alertas')) {
-    alert('No tienes permiso para acceder a este módulo.');
     window.location.href = 'index.html'; return;
   }
   document.querySelectorAll('.nav-item[data-modulo]').forEach(a => {
@@ -510,6 +510,11 @@ async function apiPatch(path, body) {
 async function cargarTrabajadores() {
   const data = await apiFetch('/trabajadores/');
   if (data) data.forEach(t => { trabajadoresMap[t.id] = t.nombres + ' ' + t.apellidos; });
+}
+
+async function cargarTiposPermiso() {
+  const data = await apiFetch('/permisos/tipos');
+  if (data) data.forEach(tp => { tiposPermisoMap[tp.id] = tp.nombre; });
 }
 
 async function cargarAlertas() {
@@ -555,7 +560,7 @@ async function cargarAlertas() {
       tipo: 'pendiente',
       icono: '📋',
       titulo: `Permiso pendiente — ${nombre}`,
-      detalle: `Tipo: ${p.tipo_permiso || '—'} · Motivo: ${p.motivo || '—'}`,
+      detalle: `Tipo: ${tiposPermisoMap[p.tipo_permiso_id] || '—'} · Motivo: ${p.motivo || '—'}`,
       badge: 'Permiso',
       tiempo: p.fecha_inicio ? new Date(p.fecha_inicio).toLocaleDateString('es-PE') : '—',
       accion: { tipo: 'permiso', id: p.id },
@@ -733,7 +738,7 @@ function logout() {
 
 async function init() {
   startClock();
-  await cargarTrabajadores();
+  await Promise.all([cargarTrabajadores(), cargarTiposPermiso()]);
   await cargarAlertas();
 }
 

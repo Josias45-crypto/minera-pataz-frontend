@@ -602,10 +602,11 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
-async function apiFetch(path) {
+async function apiFetch(path, opts = {}) {
   try {
     const r = await fetch(API + path, {
-      headers: { 'Authorization': 'Bearer ' + TOKEN }
+      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json', ...opts.headers },
+      ...opts
     });
     if (!r.ok) throw new Error(r.status);
     return await r.json();
@@ -649,12 +650,30 @@ async function loadAlertas() {
   const data = await apiFetch('/dashboard/resumen');
   const grid = document.getElementById('alerts-grid');
 
-  const alertas = data || [
-    { tipo: 'red',    texto: '<strong>Mecha lenta</strong> — Stock crítico: 3m (mín. 10m)', href: 'almacen.html', conteo: '⚠' },
-    { tipo: 'red',    texto: '<strong>Carlos Medina</strong> — Examen médico vencido', href: 'legajo.html', conteo: '!' },
-    { tipo: 'yellow', texto: '<strong>Rosa Torres</strong> — Zapatos de seguridad por vencer (28 días)', href: 'epps.html', conteo: '28d' },
-    { tipo: 'orange', texto: '<strong>1 adelanto</strong> pendiente de aprobación', href: 'adelantos.html', conteo: '1' },
-  ];
+  let alertas = [];
+
+  if (data) {
+    if ((data.almacen?.materiales_stock_critico || 0) > 0)
+      alertas.push({ tipo: 'red',    texto: `<strong>${data.almacen.materiales_stock_critico} material(es)</strong> en stock crítico`, href: 'almacen.html', conteo: data.almacen.materiales_stock_critico });
+    if ((data.epps?.vencidos || 0) > 0)
+      alertas.push({ tipo: 'red',    texto: `<strong>${data.epps.vencidos} EPP(s)</strong> vencidos sin reemplazar`, href: 'epps.html', conteo: data.epps.vencidos });
+    if ((data.documentos?.por_vencer_30_dias || 0) > 0)
+      alertas.push({ tipo: 'red',    texto: `<strong>${data.documentos.por_vencer_30_dias} documento(s)</strong> por vencer`, href: 'legajo.html', conteo: data.documentos.por_vencer_30_dias });
+    if ((data.epps?.por_vencer_15_dias || 0) > 0)
+      alertas.push({ tipo: 'yellow', texto: `<strong>${data.epps.por_vencer_15_dias} EPP(s)</strong> vencen en 15 días`, href: 'epps.html', conteo: data.epps.por_vencer_15_dias });
+    if ((data.pendientes?.adelantos || 0) > 0)
+      alertas.push({ tipo: 'orange', texto: `<strong>${data.pendientes.adelantos} adelanto(s)</strong> pendiente(s) de aprobación`, href: 'adelantos.html', conteo: data.pendientes.adelantos });
+    if ((data.pendientes?.permisos || 0) > 0)
+      alertas.push({ tipo: 'orange', texto: `<strong>${data.pendientes.permisos} permiso(s)</strong> pendiente(s) de aprobación`, href: 'permisos.html', conteo: data.pendientes.permisos });
+  } else {
+    // Fallback mock cuando el backend no responde
+    alertas = [
+      { tipo: 'red',    texto: '<strong>Mecha lenta</strong> — Stock crítico: 3m (mín. 10m)', href: 'almacen.html', conteo: '⚠' },
+      { tipo: 'red',    texto: '<strong>Carlos Medina</strong> — Examen médico vencido', href: 'legajo.html', conteo: '!' },
+      { tipo: 'yellow', texto: '<strong>Rosa Torres</strong> — Zapatos de seguridad por vencer (28 días)', href: 'epps.html', conteo: '28d' },
+      { tipo: 'orange', texto: '<strong>1 adelanto</strong> pendiente de aprobación', href: 'adelantos.html', conteo: '1' },
+    ];
+  }
 
   if (!alertas.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--green);font-size:12px">✓ Sin alertas activas</div>`;

@@ -94,7 +94,7 @@ body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sa
 .w-name{font-size:12px;font-weight:600;color:var(--text-primary);}
 .w-dni{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
 .w-dot{width:7px;height:7px;border-radius:50%;margin-left:auto;flex-shrink:0;}
-.w-dot.ok{background:var(--green)}.w-dot.warn{background:var(--yellow)}.w-dot.crit{background:var(--red)}
+.w-dot.ok{background:var(--green)}.w-dot.warn{background:var(--yellow)}.w-dot.crit{background:var(--red)}.w-dot.pending{background:var(--border-bright)}
 
 /* DETALLE */
 .detail-col{display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
@@ -380,14 +380,17 @@ function renderList(data){
   if(!data.length){el.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin resultados</div>`;return;}
   el.innerHTML = data.map(t=>{
     const ini  = (t.nombres[0]+(t.apellidos[0]||'')).toUpperCase();
-    const docs = docsMap[t.id]||[];
+    // Si los docs de este trabajador no se han cargado aún, no mostrar estado falso
+    const docsLoaded = t.id in docsMap;
+    const docs = docsMap[t.id] || [];
     const hoy  = new Date(), en30 = new Date(); en30.setDate(en30.getDate()+30);
-    const crit = docs.some(d=>d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy);
-    const warn = !crit&&docs.some(d=>{if(!d.fecha_vencimiento)return false;const v=new Date(d.fecha_vencimiento);return v>=hoy&&v<=en30;});
+    const crit = docsLoaded && docs.some(d=>d.fecha_vencimiento&&new Date(d.fecha_vencimiento)<hoy);
+    const warn = docsLoaded && !crit && docs.some(d=>{if(!d.fecha_vencimiento)return false;const v=new Date(d.fecha_vencimiento);return v>=hoy&&v<=en30;});
+    const dotClass = !docsLoaded ? 'pending' : crit ? 'crit' : warn ? 'warn' : 'ok';
     return `<div class="worker-row${selectedId===t.id?' active':''}" onclick="selectWorker(${t.id})">
       <div class="w-avatar">${ini}</div>
       <div><div class="w-name">${t.apellidos}, ${t.nombres}</div><div class="w-dni">${t.dni}</div></div>
-      <div class="w-dot ${crit?'crit':warn?'warn':'ok'}"></div>
+      <div class="w-dot ${dotClass}"></div>
     </div>`;
   }).join('');
 }
@@ -481,9 +484,7 @@ function renderFicha(t, docs){
           <div class="panel-hdr">
             <div class="panel-ttl">Historial de Tareos</div>
             <select id="sel-mes" onchange="loadTareos()" style="margin-left:auto;background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:5px 8px;color:var(--text-secondary);font-size:11px;outline:none">
-              <option value="3">Marzo 2026</option>
-              <option value="2">Febrero 2026</option>
-              <option value="1">Enero 2026</option>
+              ${(()=>{const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];const hoy=new Date();return Array.from({length:6},(_,i)=>{const d=new Date(hoy.getFullYear(),hoy.getMonth()-i,1);return `<option value="${d.getMonth()+1}">${MESES[d.getMonth()+1]} ${d.getFullYear()}</option>`;}).join('');})()}
             </select>
           </div>
           <div id="tareos-body" style="padding:12px">
@@ -558,7 +559,8 @@ function switchTab(id, btn){
 
 async function loadTareos(){
   const mes  = document.getElementById('sel-mes')?.value || 3;
-  const data = await apiFetch(`/tareos/trabajador/${selectedId}?mes=${mes}&anio=2026`);
+  const anio = new Date().getFullYear();
+  const data = await apiFetch(`/tareos/trabajador/${selectedId}?mes=${mes}&anio=${anio}`);
   const body = document.getElementById('tareos-body');
   if(!body) return;
   if(!data||!data.length){body.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:12px">Sin registros en este período</div>`;return;}
@@ -603,7 +605,13 @@ async function loadEpps(){
 async function loadPagos(){
   const body = document.getElementById('pagos-body');
   if(!body) return;
-  const periodos=[{mes:3,anio:2026,label:'Marzo 2026'},{mes:2,anio:2026,label:'Febrero 2026'},{mes:1,anio:2026,label:'Enero 2026'}];
+  const MESES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+  const hoy = new Date();
+  const periodos = [];
+  for(let i = 0; i < 6; i++){
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    periodos.push({ mes: d.getMonth()+1, anio: d.getFullYear(), label: `${MESES[d.getMonth()+1]} ${d.getFullYear()}` });
+  }
   const boletas=[];
   for(const p of periodos){
     const b=await apiFetch(`/planilla/boleta/${selectedId}?mes=${p.mes}&anio=${p.anio}`);

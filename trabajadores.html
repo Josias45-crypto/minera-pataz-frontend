@@ -827,7 +827,7 @@ function fillSelect(id, items, label) {
 
 // ── CARGAR TRABAJADORES ───────────────────────────────────
 async function loadTrabajadores() {
-  const data = await apiFetch('/trabajadores/?activo=false');
+  const data = await apiFetch('/trabajadores/?solo_activos=false');
 
   if (!data) {
     // MOCK data
