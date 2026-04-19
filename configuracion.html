@@ -501,8 +501,9 @@
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-const API=`http://127.0.0.1:8000`, TOKEN=localStorage.getItem('token')||'';
+const API = window.BACKEND_URL || 'http://127.0.0.1:8000', TOKEN=localStorage.getItem('token')||'';
 let usuarios=[], permisosData={};
 
 async function init(){

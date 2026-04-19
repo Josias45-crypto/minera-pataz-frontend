@@ -243,8 +243,9 @@
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-const API = 'http://127.0.0.1:8000';
+const API = window.BACKEND_URL || 'http://127.0.0.1:8000';
 let TOKEN = localStorage.getItem('token') || '';
 const _rol = localStorage.getItem('rol') || 'operario';
 const _tid = localStorage.getItem('trabajador_id') ? parseInt(localStorage.getItem('trabajador_id')) : null;

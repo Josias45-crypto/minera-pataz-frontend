@@ -335,8 +335,9 @@ tbody td:first-child{color:var(--text-primary);}
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-const API   = 'http://127.0.0.1:8000';
+const API = window.BACKEND_URL || 'http://127.0.0.1:8000';
 const TOKEN = localStorage.getItem('token') || '';
 let trabajadores = [], docsMap = {}, selectedId = null;
 
@@ -545,7 +546,7 @@ function buildDocCards(docs){
         <div class="doc-venc">${doc.fecha_vencimiento}</div>
         <span class="badge ${bcls}" style="margin-top:6px">${label}</span>
         <div class="doc-btns">
-          ${doc.archivo_url?`<button class="dbtn" onclick="window.open('http://127.0.0.1:8000${doc.archivo_url}','_blank')">Ver</button>`:''}
+          ${doc.archivo_url?`<button class="dbtn" onclick="window.open('${API}${doc.archivo_url}','_blank')">Ver</button>`:''}
           <button class="dbtn" onclick="openModalDoc('${tipo.key}')">Renovar</button>
         </div>
       </div>`;
@@ -663,7 +664,7 @@ async function guardarDoc(){
 
   try {
     const TOKEN = localStorage.getItem('token') || '';
-    const resp = await fetch('http://127.0.0.1:8000/legajo/documentos/upload', {
+    const resp = await fetch(API + '/legajo/documentos/upload', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + TOKEN },
       body: form

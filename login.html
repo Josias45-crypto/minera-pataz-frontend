@@ -746,8 +746,9 @@
   <div class="success-sub" id="success-sub">Bienvenido, redirigiendo...</div>
 </div>
 
+<script src="config.js"></script>
 <script>
-const API = 'http://127.0.0.1:8000';
+const API = window.BACKEND_URL || 'http://127.0.0.1:8000';
 let intentos = 0;
 let _mantActivo = false;
 
