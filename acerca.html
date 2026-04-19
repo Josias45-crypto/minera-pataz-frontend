@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acerca del Sistema — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-base:#ECEEF2;--bg-panel:#FFFFFF;--bg-card:#F4F5F8;--bg-hover:#ECEEF2;--border:#DDE0E8;--border-bright:#C8CDD8;--orange:#C9960C;--orange-dim:#FFF8E6;--orange-glow:rgba(201,150,12,0.12);--text-primary:#1A2035;--text-secondary:#4A5568;--text-muted:#8A95A8;--green:#1A7A4A;--green-dim:#E8F5EE;--red:#B83232;--red-dim:#FCEAEA;--blue:#1A4A8A;--blue-dim:#E8EFF8;--sidebar-w:240px;--bg-sidebar:#1E2535;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+
+  .sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:36px;height:36px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .logo-icon svg{width:20px;height:20px;fill:#000;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:#fff;}
+  .logo-text .sub{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;}
+  .sidebar-section{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .sidebar-label{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:10px 16px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent;text-decoration:none;color:rgba(255,255,255,0.45);font-size:13px;font-weight:500;}
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);border-left-color:rgba(255,255,255,0.2);}
+  .nav-item.active{background:var(--orange-glow);color:var(--orange);border-left-color:var(--orange);}
+  .nav-item .icon{width:16px;height:16px;opacity:0.6;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:12px;border-top:1px solid rgba(255,255,255,0.07);}
+  .user-card{display:flex;align-items:center;gap:10px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);}
+  .user-avatar{width:30px;height:30px;background:var(--orange-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif;flex-shrink:0;}
+  .user-info .uname{font-size:12px;font-weight:600;color:#fff;}
+  .user-info .urole{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.05em;}
+
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+  .topbar{height:52px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:16px;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;}
+  .content{padding:32px 24px;flex:1;max-width:860px;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  .hero{display:flex;align-items:center;gap:20px;margin-bottom:32px;animation:fadeUp 0.4s ease both;}
+  .hero-icon{width:72px;height:72px;background:var(--orange);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .hero-icon svg{width:40px;height:40px;fill:#000;}
+  .hero-name{font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;text-transform:uppercase;letter-spacing:0.02em;line-height:1;}
+  .hero-sub{font-size:13px;color:var(--text-secondary);margin-top:4px;}
+  .version-pill{display:inline-flex;align-items:center;gap:6px;background:var(--orange-dim);border:1px solid var(--orange-glow);border-radius:20px;padding:4px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--orange);margin-top:8px;}
+
+  .section{margin-bottom:24px;animation:fadeUp 0.4s ease 0.1s both;}
+  .section-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .info-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:14px;}
+  .ic-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+  .ic-val{font-size:14px;font-weight:600;color:var(--text-primary);}
+  .ic-val.mono{font-family:'JetBrains Mono',monospace;font-size:12px;}
+
+  .stack-grid{display:flex;flex-wrap:wrap;gap:8px;}
+  .stack-chip{display:flex;align-items:center;gap:7px;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:8px 12px;}
+  .stack-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;}
+  .stack-name{font-size:12px;font-weight:600;color:var(--text-primary);}
+  .stack-ver{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+
+  .contact-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:18px;display:flex;align-items:center;gap:16px;}
+  .contact-av{width:48px;height:48px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:#000;flex-shrink:0;}
+  .contact-name{font-size:15px;font-weight:700;color:var(--text-primary);}
+  .contact-role{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+  .contact-links{display:flex;flex-direction:column;gap:3px;margin-top:7px;}
+  .contact-link{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);text-decoration:none;}
+  .contact-link:hover{text-decoration:underline;}
+
+  .changelog-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .changelog-item:last-child{border-bottom:none;}
+  .cl-ver{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:var(--orange);background:var(--orange-dim);padding:2px 7px;border-radius:4px;white-space:nowrap;align-self:flex-start;margin-top:2px;}
+  .cl-date{font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+  .cl-desc{font-size:12px;color:var(--text-secondary);}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="logo-text"><div class="name">Minera Pataz</div><div class="sub">Sistema Integral</div></div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Principal</div>
+    <a class="nav-item" href="index.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Inicio
+    </a>
+    <a class="nav-item" href="dashboard.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Dashboard
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item active" href="acerca.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Acerca del sistema
+    </a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">—</div>
+      <div class="user-info"><div class="uname" id="nav-user">—</div><div class="urole" id="nav-rol">—</div></div>
+      <button onclick="cerrarSesion()" title="Cerrar sesión" style="margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px 6px;cursor:pointer;color:rgba(255,255,255,0.4);" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+    <div style="text-align:center;padding:6px 0 2px;border-top:1px solid rgba(255,255,255,0.05);margin-top:7px;"><a href="https://josias45-crypto.github.io/VendeMas-App---pagina-web/" target="_blank" style="font-size:8px;color:rgba(255,255,255,0.2);font-family:'JetBrains Mono',monospace;text-decoration:none;letter-spacing:0.05em;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">Powered by Nexvora Systems</a></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Acerca del Sistema</div>
+  </div>
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="hero-name">Sistema Integral<br>de Gestión Minera</div>
+        <div class="hero-sub">Minera Pataz · La Libertad, Perú</div>
+        <div class="version-pill">
+          <span>▪</span> v1.3.0 · 2026
+        </div>
+      </div>
+    </div>
+
+    <!-- INFORMACIÓN GENERAL -->
+    <div class="section">
+      <div class="section-title">Información General</div>
+      <div class="info-grid">
+        <div class="info-card"><div class="ic-lbl">Nombre del sistema</div><div class="ic-val">Sistema Integral de Gestión Minera</div></div>
+        <div class="info-card"><div class="ic-lbl">Cliente</div><div class="ic-val">Minera Pataz SAC</div></div>
+        <div class="info-card"><div class="ic-lbl">Versión actual</div><div class="ic-val mono">v1.3.0 — rama backend1.3</div></div>
+        <div class="info-card"><div class="ic-lbl">Última actualización</div><div class="ic-val mono">19 / Abr / 2026</div></div>
+        <div class="info-card"><div class="ic-lbl">Módulos activos</div><div class="ic-val">10 módulos operativos</div></div>
+        <div class="info-card"><div class="ic-lbl">Roles del sistema</div><div class="ic-val">Admin · RRHH · Supervisor · Almacén · Operario</div></div>
+      </div>
+    </div>
+
+    <!-- STACK TECNOLÓGICO -->
+    <div class="section">
+      <div class="section-title">Stack Tecnológico</div>
+      <div class="stack-grid">
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">Python</div><div class="stack-ver">3.11</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">FastAPI</div><div class="stack-ver">0.110+</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">PostgreSQL</div><div class="stack-ver">16</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">SQLAlchemy</div><div class="stack-ver">2.0</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">JWT · python-jose</div><div class="stack-ver">Auth</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">bcrypt · passlib</div><div class="stack-ver">Seguridad</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">HTML · CSS · JS</div><div class="stack-ver">Frontend vanilla</div></div></div>
+        <div class="stack-chip"><div class="stack-dot"></div><div><div class="stack-name">Docker</div><div class="stack-ver">PostgreSQL 16</div></div></div>
+      </div>
+    </div>
+
+    <!-- DESARROLLADOR -->
+    <div class="section">
+      <div class="section-title">Empresa Desarrolladora</div>
+      <div class="contact-card">
+        <div class="contact-av">NX</div>
+        <div>
+          <div class="contact-name">Nexvora Systems</div>
+          <div class="contact-role">Desarrollo de Software · Sistemas de Gestión Empresarial</div>
+          <div class="contact-links">
+            <a class="contact-link" href="tel:929201444">📞 929 201 444</a>
+            <a class="contact-link" href="mailto:joeljosias45@gmail.com">✉ joeljosias45@gmail.com</a>
+            <a class="contact-link" href="https://josias45-crypto.github.io/VendeMas-App---pagina-web/" target="_blank">🌐 nexvorasystems.github.io</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL DE VERSIONES -->
+    <div class="section">
+      <div class="section-title">Historial de Versiones</div>
+      <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:14px;">
+        <div class="changelog-item">
+          <div><div class="cl-ver">v1.3.0</div></div>
+          <div><div class="cl-date">Abr 2026</div><div class="cl-desc">Panel desarrollador, modo mantenimiento, correcciones QA (22 errores), índices BD, CORS producción, parámetros del sistema.</div></div>
+        </div>
+        <div class="changelog-item">
+          <div><div class="cl-ver">v1.2.0</div></div>
+          <div><div class="cl-date">Mar 2026</div><div class="cl-desc">Módulos completos: Planilla régimen 30×12, Legajo digital con upload, EPPs con reemplazo, Almacén con préstamos.</div></div>
+        </div>
+        <div class="changelog-item">
+          <div><div class="cl-ver">v1.1.0</div></div>
+          <div><div class="cl-date">Feb 2026</div><div class="cl-desc">Tareos con marcado biométrico, Permisos con aprobación, Adelantos con límite 50%, Dashboard en tiempo real.</div></div>
+        </div>
+        <div class="changelog-item">
+          <div><div class="cl-ver">v1.0.0</div></div>
+          <div><div class="cl-date">Ene 2026</div><div class="cl-desc">Primer release: autenticación JWT, 5 roles, CRUD trabajadores, catálogos, estructura base del sistema.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOPORTE -->
+    <div class="section">
+      <div class="section-title">Soporte Técnico</div>
+      <div style="background:var(--orange-dim);border:1px solid var(--orange-glow);border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.16 6.16l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17z"/></svg>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-primary)">¿Necesitas ayuda técnica?</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;">
+            Contáctanos: <strong style="font-family:'JetBrains Mono',monospace">joeljosias45@gmail.com</strong>
+            · <strong style="font-family:'JetBrains Mono',monospace">929 201 444</strong>
+            · Nexvora Systems
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+(function(){
+  const token = localStorage.getItem('token');
+  if(!token){ window.location.href='login.html'; return; }
+  const u = localStorage.getItem('username')||'—';
+  const r = localStorage.getItem('rol')||'—';
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+  document.getElementById('nav-user').textContent   = u;
+  document.getElementById('nav-rol').textContent    = r.charAt(0).toUpperCase()+r.slice(1);
+})();
+function cerrarSesion(){ localStorage.clear(); window.location.href='login.html'; }
+</script>
+</body>
+</html>

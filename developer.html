@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Desarrollador — Minera Pataz</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base:#ECEEF2;--bg-panel:#FFFFFF;--bg-card:#F4F5F8;--bg-hover:#ECEEF2;
+    --border:#DDE0E8;--border-bright:#C8CDD8;--orange:#C9960C;--orange-dim:#FFF8E6;
+    --orange-glow:rgba(201,150,12,0.12);--text-primary:#1A2035;--text-secondary:#4A5568;
+    --text-muted:#8A95A8;--green:#1A7A4A;--green-dim:#E8F5EE;--red:#B83232;
+    --red-dim:#FCEAEA;--yellow:#C9960C;--yellow-dim:#FFF8E6;--blue:#1A4A8A;
+    --blue-dim:#E8EFF8;--sidebar-w:220px;--bg-sidebar:#1E2535;
+    --dev:#7C3AED;--dev-dim:#EDE9FE;--dev-glow:rgba(124,58,237,0.15);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg-base);color:var(--text-primary);font-family:'Barlow',sans-serif;min-height:100vh;display:flex;}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:var(--sidebar-w);background:var(--bg-sidebar);display:flex;flex-direction:column;position:fixed;height:100vh;top:0;left:0;z-index:100;overflow-y:auto;}
+  .sidebar-logo{padding:18px 14px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;}
+  .logo-icon{width:34px;height:34px;background:var(--dev);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .logo-icon svg{width:18px;height:18px;stroke:#fff;fill:none;}
+  .logo-text .name{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#fff;}
+  .logo-text .sub{font-size:9px;color:rgba(124,58,237,0.8);letter-spacing:0.1em;text-transform:uppercase;}
+  .sidebar-section{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .sidebar-label{font-size:8px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:10px 14px 4px;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;cursor:pointer;border-left:2px solid transparent;text-decoration:none;color:rgba(255,255,255,0.45);font-size:12px;font-weight:500;transition:all 0.15s;}
+  .nav-item:hover{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.85);border-left-color:rgba(255,255,255,0.2);}
+  .nav-item.active{background:var(--dev-glow);color:#A78BFA;border-left-color:var(--dev);}
+  .nav-item .icon{width:14px;height:14px;opacity:0.6;flex-shrink:0;}
+  .nav-item.active .icon{opacity:1;}
+  .sidebar-bottom{margin-top:auto;padding:10px;border-top:1px solid rgba(255,255,255,0.07);}
+  .user-card{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);}
+  .user-avatar{width:28px;height:28px;background:var(--dev);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff;font-family:'Barlow Condensed',sans-serif;flex-shrink:0;}
+  .user-info .uname{font-size:11px;font-weight:600;color:#fff;}
+  .user-info .urole{font-size:9px;color:#A78BFA;text-transform:uppercase;letter-spacing:0.06em;}
+
+  /* ── MAIN ── */
+  .main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+  .topbar{height:50px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:12px;position:sticky;top:0;z-index:50;}
+  .topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;}
+  .dev-badge{background:var(--dev-dim);color:var(--dev);border:1px solid rgba(124,58,237,0.3);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+  .clock-dev{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);}
+  .content{padding:20px;flex:1;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ── TABS ── */
+  .main-tabs{display:flex;gap:2px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:3px;margin-bottom:18px;animation:fadeUp 0.3s ease both;flex-wrap:wrap;}
+  .main-tab{flex:1;padding:8px 6px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.15s;white-space:nowrap;}
+  .main-tab.active{background:var(--bg-panel);color:var(--dev);box-shadow:0 1px 4px rgba(0,0,0,0.15);}
+  .tab-view{display:none;animation:fadeUp 0.25s ease both;}.tab-view.active{display:block;}
+
+  /* ── CARDS ESTADO ── */
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:18px;}
+  .estado-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:16px;position:relative;overflow:hidden;}
+  .estado-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .estado-card.verde::before{background:var(--green);}
+  .estado-card.azul::before{background:var(--blue);}
+  .estado-card.dev::before{background:var(--dev);}
+  .estado-card.naranja::before{background:var(--orange);}
+  .ec-lbl{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+  .ec-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;line-height:1;}
+  .estado-card.verde .ec-val{color:var(--green);}
+  .estado-card.azul .ec-val{color:var(--blue);}
+  .estado-card.dev .ec-val{color:var(--dev);}
+  .estado-card.naranja .ec-val{color:var(--orange);}
+  .ec-sub{font-size:10px;color:var(--text-muted);margin-top:4px;}
+
+  /* ── PANEL ── */
+  .panel{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+  .panel-header{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-panel);}
+  .panel-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;}
+
+  /* ── TABLA ── */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:11px;}
+  thead tr{border-bottom:1px solid var(--border);background:var(--bg-card);}
+  thead th{padding:7px 10px;text-align:left;font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:var(--bg-hover);}
+  tbody td{padding:8px 10px;color:var(--text-secondary);}
+  tbody td:first-child{color:var(--text-primary);font-weight:500;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:10px;}
+
+  /* ── BADGE ── */
+  .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+  .badge.green{background:var(--green-dim);color:var(--green);}
+  .badge.red{background:var(--red-dim);color:var(--red);}
+  .badge.orange{background:var(--orange-dim);color:var(--orange);}
+  .badge.blue{background:var(--blue-dim);color:var(--blue);}
+  .badge.dev{background:var(--dev-dim);color:var(--dev);}
+
+  /* ── FORM ── */
+  .form-section{padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;}
+  .form-input,.form-select,.form-textarea{background:var(--bg-panel);border:1px solid var(--border);border-radius:5px;padding:8px 11px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;transition:border-color 0.2s;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--dev);}
+  .form-textarea{resize:vertical;min-height:70px;}
+
+  /* ── BOTONES ── */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.15s;}
+  .btn svg{width:13px;height:13px;}
+  .btn-dev{background:var(--dev);color:#fff;}.btn-dev:hover{background:#6D28D9;}
+  .btn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(26,122,74,0.3);}
+  .btn-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(184,50,50,0.3);}
+  .btn-ghost{background:var(--bg-panel);color:var(--text-secondary);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--border-bright);color:var(--text-primary);}
+  .btn-sm{padding:5px 10px;font-size:10px;}
+
+  /* ── SWITCH MANTENIMIENTO ── */
+  .mant-switch-wrap{display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-panel);border-radius:8px;border:1px solid var(--border);}
+  .switch{width:44px;height:24px;border-radius:12px;cursor:pointer;position:relative;border:none;transition:background 0.2s;flex-shrink:0;}
+  .switch.on{background:var(--red);}
+  .switch.off{background:var(--border-bright);}
+  .switch::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+  .switch.on::after{left:23px;}
+  .switch.off::after{left:3px;}
+  .switch-label{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+  .switch-sub{font-size:11px;color:var(--text-muted);}
+
+  /* ── RESULT BOX ── */
+  .result-box{display:none;padding:10px 14px;border-radius:6px;font-size:12px;margin-top:8px;border:1px solid;}
+  .result-box.success{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+  .result-box.error{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+  .result-box.show{display:block;}
+
+  /* ── TOAST ── */
+  .toast{position:fixed;bottom:22px;right:22px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:11px 15px;display:flex;align-items:center;gap:9px;font-size:12px;z-index:999;animation:toastIn 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.3);}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .toast.success{border-color:var(--green)}.toast.error{border-color:var(--red)}.toast.warning{border-color:var(--orange)}.toast.dev{border-color:var(--dev)}
+  .toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .toast.success .toast-dot{background:var(--green)}.toast.error .toast-dot{background:var(--red)}.toast.warning .toast-dot{background:var(--orange)}.toast.dev .toast-dot{background:var(--dev)}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px;}
+  .empty-state{text-align:center;padding:30px;color:var(--text-muted);font-size:11px;}
+
+  /* ── BACKUP BTN GRANDE ── */
+  .backup-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px;text-align:center;}
+  .backup-icon{width:64px;height:64px;background:var(--dev-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .backup-icon svg{width:30px;height:30px;stroke:var(--dev);fill:none;}
+</style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    </div>
+    <div class="logo-text"><div class="name">Dev Panel</div><div class="sub">Minera Pataz</div></div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Sistema</div>
+    <a class="nav-item active" href="#" onclick="switchTab('estado',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>Estado
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('logs',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Logs
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('usuarios',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Usuarios
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operaciones</div>
+    <a class="nav-item" href="#" onclick="switchTab('mantenimiento',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Mantenimiento
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('backup',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 15 21 21 3 21 3 15"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Backup
+    </a>
+    <a class="nav-item" href="#" onclick="switchTab('reset',this);return false">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Reset Password
+    </a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Acceso</div>
+    <a class="nav-item" href="index.html">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Ir al Sistema
+    </a>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="user-avatar" id="nav-avatar">DV</div>
+      <div class="user-info">
+        <div class="uname" id="nav-user">dev_josias</div>
+        <div class="urole">Desarrollador</div>
+      </div>
+      <button onclick="cerrarSesion()" title="Cerrar sesión" style="margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px 6px;cursor:pointer;color:rgba(255,255,255,0.4);transition:all 0.15s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.color='rgba(255,255,255,0.4)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+    <div style="text-align:center;padding:6px 0 2px;border-top:1px solid rgba(255,255,255,0.05);margin-top:7px;"><a href="https://josias45-crypto.github.io/VendeMas-App---pagina-web/" target="_blank" style="font-size:8px;color:rgba(255,255,255,0.2);font-family:'JetBrains Mono',monospace;text-decoration:none;letter-spacing:0.05em;" onmouseover="this.style.color='rgba(255,255,255,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.2)'">Powered by Nexvora Systems</a></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">Panel Desarrollador</div>
+    <span class="dev-badge">ROL: DEV</span>
+    <div class="clock-dev" id="clock">—</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── ESTADO ── -->
+    <div class="tab-view active" id="tab-estado">
+      <div class="cards-grid" id="cards-estado">
+        <div class="estado-card verde"><div class="ec-lbl">Base de Datos</div><div class="ec-val" id="ec-bd">—</div><div class="ec-sub" id="ec-bd-sub">Verificando...</div></div>
+        <div class="estado-card azul"><div class="ec-lbl">Python</div><div class="ec-val" id="ec-python">—</div><div class="ec-sub">versión activa</div></div>
+        <div class="estado-card naranja"><div class="ec-lbl">Uptime</div><div class="ec-val" id="ec-uptime">—</div><div class="ec-sub" id="ec-uptime-sub">desde último reinicio</div></div>
+        <div class="estado-card dev"><div class="ec-lbl">Estado</div><div class="ec-val" id="ec-estado">—</div><div class="ec-sub" id="ec-timestamp">—</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Información del Sistema</div><button class="btn btn-ghost btn-sm" onclick="loadEstado()">↺ Actualizar</button></div>
+        <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;" id="info-sistema">
+          <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:11px;grid-column:1/-1">Cargando...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LOGS ── -->
+    <div class="tab-view" id="tab-logs">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Últimos Errores del Sistema</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="loadLogs()">↺ Actualizar</button>
+            <button class="btn btn-red btn-sm" onclick="clearLogView()">Limpiar vista</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Nivel</th><th>Endpoint</th><th>Mensaje</th><th>Fecha</th></tr></thead>
+            <tbody id="tbody-logs"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USUARIOS ── -->
+    <div class="tab-view" id="tab-usuarios">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Todos los Usuarios del Sistema</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadUsuarios()">↺ Actualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Username</th><th>Rol</th><th>Estado</th><th>Último acceso</th><th>Trabajador</th></tr></thead>
+            <tbody id="tbody-usuarios"><tr><td colspan="6" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MANTENIMIENTO ── -->
+    <div class="tab-view" id="tab-mantenimiento">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="panel-header"><div class="panel-title">Modo Mantenimiento</div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+          <div class="mant-switch-wrap">
+            <button class="switch off" id="mant-switch" onclick="toggleMantSwitch()"></button>
+            <div>
+              <div class="switch-label" id="mant-switch-label">Mantenimiento INACTIVO</div>
+              <div class="switch-sub">Al activar, los usuarios verán la pantalla de mantenimiento al abrir login</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mensaje para los usuarios</label>
+            <textarea class="form-textarea" id="f-mant-msg" placeholder="Estamos realizando mejoras al sistema. Vuelva pronto."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hora estimada de retorno</label>
+            <input type="text" class="form-input" id="f-mant-retorno" placeholder="Ej: 15:30, 2 horas, Mañana 08:00">
+          </div>
+          <button class="btn btn-dev" onclick="guardarMantenimiento()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Guardar configuración
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BACKUP ── -->
+    <div class="tab-view" id="tab-backup">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Backup de Base de Datos</div></div>
+        <div class="backup-hero">
+          <div class="backup-icon">
+            <svg viewBox="0 0 24 24"><polyline points="21 15 21 21 3 21 3 15"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;">Exportar Base de Datos</div>
+          <div style="font-size:12px;color:var(--text-muted);max-width:380px;line-height:1.6;">Exporta trabajadores, asistencias, adelantos, permisos, planillas, legajos y EPPs en formato JSON descargable.</div>
+          <button class="btn btn-dev" onclick="generarBackup()" id="btn-backup" style="font-size:14px;padding:12px 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="21 15 21 21 3 21 3 15"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Generar y Descargar Backup
+          </button>
+          <div style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">backup_pataz_YYYYMMDD_HHMM.json</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RESET PASSWORD ── -->
+    <div class="tab-view" id="tab-reset">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Resetear Contraseña de Usuario</div></div>
+        <div class="form-section">
+          <div style="background:var(--orange-dim);border:1px solid var(--orange-glow);border-radius:6px;padding:10px 14px;font-size:11px;color:var(--orange);">
+            ⚠ Esta acción no requiere la contraseña anterior y no puede deshacerse. Úsala solo en casos de soporte.
+          </div>
+          <div class="form-group">
+            <label class="form-label">Username del usuario</label>
+            <input type="text" class="form-input" id="f-reset-user" placeholder="admin, rrhh01...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nueva contraseña</label>
+            <input type="password" class="form-input" id="f-reset-pass1" placeholder="Mínimo 6 caracteres">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmar contraseña</label>
+            <input type="password" class="form-input" id="f-reset-pass2" placeholder="Repetir contraseña">
+          </div>
+          <button class="btn btn-dev" onclick="resetearPassword()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Resetear contraseña
+          </button>
+          <div class="result-box" id="reset-result"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const API   = 'http://127.0.0.1:8000';
+const TOKEN = localStorage.getItem('token') || '';
+
+// ── CONTROL DE ACCESO ─────────────────────────────────────
+(function(){
+  const rol = localStorage.getItem('rol') || '';
+  if(!TOKEN){ window.location.href = 'login.html'; return; }
+  if(rol !== 'dev'){
+    alert('Acceso restringido — Solo desarrolladores.');
+    window.location.href = 'index.html';
+    return;
+  }
+  const u = localStorage.getItem('username') || 'dev';
+  document.getElementById('nav-user').textContent  = u;
+  document.getElementById('nav-avatar').textContent = u.slice(0,2).toUpperCase();
+})();
+
+// ── RELOJ ─────────────────────────────────────────────────
+setInterval(()=>{
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('es-PE',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit',second:'2-digit'}).toUpperCase();
+},1000);
+
+// ── API FETCH ─────────────────────────────────────────────
+async function apiFetch(path, opts={}){
+  try{
+    const r=await fetch(API+path,{headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json',...(opts.headers||{})},...opts});
+    if(!r.ok){const e=await r.json();throw new Error(e.detail||r.status);}
+    return await r.json();
+  }catch(e){console.warn(path,e.message);return null;}
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(tab, btn){
+  document.querySelectorAll('.main-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(a=>a.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='estado')    loadEstado();
+  if(tab==='logs')      loadLogs();
+  if(tab==='usuarios')  loadUsuarios();
+  if(tab==='mantenimiento') loadMantenimiento();
+}
+
+// ── ESTADO ────────────────────────────────────────────────
+async function loadEstado(){
+  const [estado, info] = await Promise.all([
+    apiFetch('/dev/estado'),
+    apiFetch('/dev/info'),
+  ]);
+
+  if(estado){
+    document.getElementById('ec-bd').textContent      = estado.base_datos?.conectada ? 'OK' : 'ERROR';
+    document.getElementById('ec-bd-sub').textContent  = estado.base_datos?.mensaje || '—';
+    document.getElementById('ec-python').textContent  = estado.python_version || '—';
+    document.getElementById('ec-uptime').textContent  = estado.uptime?.split(' ')[0] || '—';
+    document.getElementById('ec-uptime-sub').textContent = estado.uptime || '—';
+    document.getElementById('ec-estado').textContent  = estado.estado?.toUpperCase() || '—';
+    document.getElementById('ec-timestamp').textContent = new Date(estado.timestamp).toLocaleTimeString('es-PE');
+  }
+
+  if(info){
+    document.getElementById('info-sistema').innerHTML = Object.entries(info).map(([k,v])=>`
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px;">
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;">${k}</div>
+        <div class="mono" style="color:var(--text-primary)">${Array.isArray(v)?v.join(', '):v}</div>
+      </div>`).join('');
+  }
+}
+
+// ── LOGS ──────────────────────────────────────────────────
+async function loadLogs(){
+  const data = await apiFetch('/dev/logs?limit=50');
+  const tbody = document.getElementById('tbody-logs');
+  if(!data||!data.length){
+    tbody.innerHTML=`<tr><td colspan="5" class="empty-state">Sin errores registrados ✓</td></tr>`;
+    return;
+  }
+  const niv = {ERROR:'<span class="badge red">ERROR</span>',WARNING:'<span class="badge orange">WARN</span>',INFO:'<span class="badge blue">INFO</span>'};
+  tbody.innerHTML = data.map(l=>`<tr>
+    <td class="mono" style="color:var(--text-muted)">${l.id}</td>
+    <td>${niv[l.nivel]||`<span class="badge">${l.nivel}</span>`}</td>
+    <td class="mono">${l.endpoint||'—'}</td>
+    <td style="max-width:320px;word-break:break-word">${l.mensaje}</td>
+    <td class="mono" style="white-space:nowrap;font-size:9px">${l.fecha?new Date(l.fecha).toLocaleString('es-PE'):'—'}</td>
+  </tr>`).join('');
+}
+function clearLogView(){
+  document.getElementById('tbody-logs').innerHTML=`<tr><td colspan="5" class="empty-state">Vista limpiada (los logs siguen en BD)</td></tr>`;
+}
+
+// ── USUARIOS ──────────────────────────────────────────────
+async function loadUsuarios(){
+  const data = await apiFetch('/dev/usuarios-activos');
+  const tbody = document.getElementById('tbody-usuarios');
+  if(!data){tbody.innerHTML=`<tr><td colspan="6" class="empty-state">Error al cargar</td></tr>`;return;}
+  const roles={admin:'<span class="badge orange">Admin</span>',rrhh:'<span class="badge blue">RRHH</span>',supervisor:'<span class="badge green">Supervisor</span>',almacen:'<span class="badge yellow">Almacén</span>',operario:'<span class="badge">Operario</span>',dev:'<span class="badge dev">Dev</span>'};
+  tbody.innerHTML = data.map(u=>`<tr>
+    <td class="mono">${u.id}</td>
+    <td><strong>${u.username}</strong></td>
+    <td>${roles[u.rol]||`<span class="badge">${u.rol}</span>`}</td>
+    <td>${u.activo?'<span class="badge green">Activo</span>':'<span class="badge red">Inactivo</span>'}${u.bloqueado?' <span class="badge red">Bloqueado</span>':''}</td>
+    <td class="mono" style="font-size:9px">${u.ultimo_acceso?new Date(u.ultimo_acceso).toLocaleString('es-PE'):'Nunca'}</td>
+    <td class="mono">${u.trabajador_id||'—'}</td>
+  </tr>`).join('');
+}
+
+// ── MANTENIMIENTO ─────────────────────────────────────────
+let _mantState = false;
+
+async function loadMantenimiento(){
+  const data = await apiFetch('/dev/mantenimiento');
+  if(!data) return;
+  _mantState = data.activo;
+  updateMantUI();
+  if(data.mensaje) document.getElementById('f-mant-msg').value = data.mensaje;
+  if(data.retorno_estimado) document.getElementById('f-mant-retorno').value = data.retorno_estimado;
+}
+
+function updateMantUI(){
+  const sw = document.getElementById('mant-switch');
+  const lbl = document.getElementById('mant-switch-label');
+  sw.className = `switch ${_mantState ? 'on' : 'off'}`;
+  lbl.textContent = _mantState ? '⚠ Mantenimiento ACTIVO' : 'Mantenimiento INACTIVO';
+  lbl.style.color = _mantState ? 'var(--red)' : 'var(--text-primary)';
+}
+
+function toggleMantSwitch(){
+  _mantState = !_mantState;
+  updateMantUI();
+}
+
+async function guardarMantenimiento(){
+  const r = await apiFetch('/dev/mantenimiento',{
+    method:'POST',
+    body:JSON.stringify({
+      activo:           _mantState,
+      mensaje:          document.getElementById('f-mant-msg').value.trim() || 'Sistema en mantenimiento.',
+      retorno_estimado: document.getElementById('f-mant-retorno').value.trim(),
+    })
+  });
+  if(r) showToast(_mantState?'Modo mantenimiento ACTIVADO':'Modo mantenimiento desactivado', _mantState?'error':'success');
+  else  showToast('Error al guardar','error');
+}
+
+// ── BACKUP ────────────────────────────────────────────────
+async function generarBackup(){
+  const btn = document.getElementById('btn-backup');
+  btn.disabled = true;
+  btn.textContent = 'Generando...';
+  try{
+    const r = await fetch(API+'/dev/backup',{method:'POST',headers:{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}});
+    if(!r.ok) throw new Error('Error del servidor');
+    const blob = await r.blob();
+    const url  = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const fecha = new Date().toISOString().slice(0,16).replace(/[T:]/g,'').replace('-','').slice(0,13);
+    a.href     = url;
+    a.download = `backup_pataz_${fecha}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup descargado correctamente','success');
+  }catch(e){
+    showToast('Error al generar backup','error');
+  }finally{
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="21 15 21 21 3 21 3 15"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Generar y Descargar Backup`;
+  }
+}
+
+// ── RESET PASSWORD ────────────────────────────────────────
+async function resetearPassword(){
+  const username = document.getElementById('f-reset-user').value.trim();
+  const pass1    = document.getElementById('f-reset-pass1').value;
+  const pass2    = document.getElementById('f-reset-pass2').value;
+  const box      = document.getElementById('reset-result');
+  if(!username||!pass1){box.className='result-box error show';box.textContent='Username y contraseña son obligatorios';return;}
+  if(pass1.length<6){box.className='result-box error show';box.textContent='Mínimo 6 caracteres';return;}
+  if(pass1!==pass2){box.className='result-box error show';box.textContent='Las contraseñas no coinciden';return;}
+  const r = await apiFetch('/dev/resetear-password',{method:'POST',body:JSON.stringify({username,password:pass1})});
+  if(r){
+    box.className='result-box success show';
+    box.textContent=`✓ Contraseña de "${username}" actualizada correctamente`;
+    document.getElementById('f-reset-pass1').value='';
+    document.getElementById('f-reset-pass2').value='';
+  }else{
+    box.className='result-box error show';
+    box.textContent='Error — usuario no encontrado o contraseña inválida';
+  }
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, type='success'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-dot"></div><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+function cerrarSesion(){
+  localStorage.clear();
+  window.location.href='login.html';
+}
+
+// ── INIT ──────────────────────────────────────────────────
+loadEstado();
+</script>
+</body>
+</html>
