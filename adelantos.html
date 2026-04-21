@@ -504,6 +504,28 @@ function toggleTheme() {
   });
 })();
 </script>
+<script>
+// -- AJUSTES POR ROL -- Adelantos
+(function(){
+  var rol=localStorage.getItem('rol')||'operario';
+  // rrhh: solo admin puede aprobar — ocultar botones de accion
+  if(rol==='rrhh'){
+    var st=document.createElement('style');
+    st.textContent='body.rol-rrhh .btn-sm.approve,body.rol-rrhh .btn-sm.reject{display:none!important;}';
+    document.head.appendChild(st);
+    document.body.classList.add('rol-rrhh');
+  }
+  // operario: ocultar selector de trabajador (backend fuerza su propio ID)
+  if(rol==='operario'){
+    function ajustarOp(){
+      var g=document.getElementById('grupo-trabajador');
+      if(g)g.style.display='none';
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ajustarOp);
+    else ajustarOp();
+  }
+})();
+</script>
 <script src="notificaciones.js"></script>
 </body>
 </html>

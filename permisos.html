@@ -412,7 +412,7 @@ init();
   const PERMISOS = {
     admin:['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
     rrhh:['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
-    supervisor:['dashboard','tareos','almacen','epps'],
+    supervisor:['dashboard','tareos','almacen','epps','permisos'],
     almacen:['dashboard','almacen','epps'],
     operario:['dashboard','tareos','adelantos','permisos'],
   };
@@ -505,6 +505,28 @@ function toggleTheme() {
     if (icon)  icon.textContent  = saved === 'dark' ? '☀️' : '🌙';
     if (label) label.textContent = saved === 'dark' ? 'Modo claro' : 'Modo oscuro';
   });
+})();
+</script>
+<script>
+// -- AJUSTES POR ROL -- Permisos
+(function(){
+  var rol=localStorage.getItem('rol')||'operario';
+  // rrhh: no puede aprobar/rechazar directo — ocultar esos botones
+  if(rol==='rrhh'){
+    var st=document.createElement('style');
+    st.textContent='body.rol-rrhh .btn-sm.approve,body.rol-rrhh .btn-sm.reject{display:none!important;}';
+    document.head.appendChild(st);
+    document.body.classList.add('rol-rrhh');
+  }
+  // operario: ocultar selector de trabajador en modal (se fuerza su propio ID en backend)
+  if(rol==='operario'){
+    function ajustarOp(){
+      var g=document.getElementById('grupo-trabajador');
+      if(g)g.style.display='none';
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ajustarOp);
+    else ajustarOp();
+  }
 })();
 </script>
 <script src="notificaciones.js"></script>

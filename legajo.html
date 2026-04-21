@@ -729,7 +729,7 @@ init();
     rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
     supervisor: ['dashboard','tareos','almacen','epps'],
     almacen:    ['dashboard','almacen','epps'],
-    operario:   ['dashboard','tareos','adelantos','permisos'],
+    operario:   ['dashboard','tareos','adelantos','permisos','legajo'],
   };
   const token      = localStorage.getItem('token');
   const rol        = localStorage.getItem('rol') || 'operario';
@@ -852,6 +852,59 @@ function toggleTheme() {
     if (icon)  icon.textContent  = saved === 'dark' ? '☀️' : '🌙';
     if (label) label.textContent = saved === 'dark' ? 'Modo claro' : 'Modo oscuro';
   });
+})();
+</script>
+<script>
+// -- AJUSTES POR ROL -- Legajo
+(function(){
+  var rol=localStorage.getItem('rol')||'operario';
+  var tid=parseInt(localStorage.getItem('trabajador_id')||'0');
+  var API=window.BACKEND_URL||'http://localhost:8000';
+  if(rol==='operario'){
+    function ajustarOp(){
+      // Ocultar boton subir
+      var bSubir=document.getElementById('btn-subir');
+      if(bSubir)bSubir.style.display='none';
+      // Ocultar lista de trabajadores
+      var wList=document.getElementById('workers-list');
+      if(wList){
+        var col=wList.closest('.panel');
+        if(col)col.style.display='none';else wList.style.display='none';
+      }
+      // Ocultar buscador
+      var sw=document.getElementById('search-w');
+      if(sw&&sw.parentElement)sw.parentElement.style.display='none';
+      if(!tid)return;
+      // Auto-cargar legajo del operario
+      fetch(API+'/legajo/trabajador/'+tid,{
+        headers:{'Authorization':'Bearer '+(localStorage.getItem('token')||'')}
+      }).then(function(r){return r.ok?r.json():null;}).then(function(data){
+        if(!data)return;
+        var det=document.getElementById('detail-col');
+        var emp=document.getElementById('empty-state');if(emp)emp.style.display='none';
+        if(!det)return;
+        var t=data.trabajador||data;
+        var nombre=(t.apellidos||'')+', '+(t.nombres||'');
+        var docs=(data.documentos||[]);
+        var docHTML=docs.length===0
+          ?'<div style="color:var(--text-muted);font-size:12px;padding:12px 0">Sin documentos registrados.</div>'
+          :docs.map(function(d){
+            return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">'
+              +'<div style="font-weight:600;color:var(--text-primary)">'+(d.tipo||d.nombre_archivo||'Documento')+'</div>'
+              +'<div style="color:var(--text-muted);font-size:10px;font-family:\'JetBrains Mono\',monospace">'
+              +(d.fecha_vencimiento?'Vence: '+d.fecha_vencimiento:'Sin vencimiento')+'</div></div>';
+          }).join('');
+        det.innerHTML='<div style="padding:16px">'
+          +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;margin-bottom:4px">'+nombre+'</div>'
+          +'<div style="font-size:11px;color:var(--text-secondary);margin-bottom:16px">DNI: '+(t.dni||'&mdash;')+'</div>'
+          +'<div style="font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">MIS DOCUMENTOS</div>'
+          +docHTML+'</div>';
+        var bExp=document.getElementById('btn-exportar');if(bExp)bExp.disabled=false;
+      }).catch(function(){});
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ajustarOp);
+    else ajustarOp();
+  }
 })();
 </script>
 <script src="notificaciones.js"></script>

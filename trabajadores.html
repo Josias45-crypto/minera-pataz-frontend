@@ -1216,7 +1216,7 @@ init();
   const PERMISOS = {
     admin:      ['dashboard','trabajadores','tareos','planilla','almacen','epps','adelantos','permisos','legajo','configuracion'],
     rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
-    supervisor: ['dashboard','tareos','almacen','epps'],
+    supervisor: ['dashboard','tareos','almacen','epps','trabajadores'],
     almacen:    ['dashboard','almacen','epps'],
     operario:   ['dashboard','tareos','adelantos','permisos'],
   };
@@ -1341,6 +1341,23 @@ function toggleTheme() {
     if (icon)  icon.textContent  = saved === 'dark' ? '☀️' : '🌙';
     if (label) label.textContent = saved === 'dark' ? 'Modo claro' : 'Modo oscuro';
   });
+})();
+</script>
+<script>
+// ── AJUSTES POR ROL — Trabajadores ────────────────────────
+(function(){
+  var rol = localStorage.getItem('rol')||'operario';
+  if(rol==='supervisor'){
+    // Solo lectura: ocultar botones de escritura via CSS con body class
+    document.body.classList.add('rol-supervisor');
+    var st=document.createElement('style');
+    st.textContent=[
+      'body.rol-supervisor .row-actions{display:none!important;}',
+      'body.rol-supervisor .toolbar .btn-primary{display:none!important;}',
+      'body.rol-supervisor .modal-footer .btn-primary{display:none!important;}',
+    ].join('');
+    document.head.appendChild(st);
+  }
 })();
 </script>
 <script src="notificaciones.js"></script>

@@ -601,7 +601,7 @@ init();
     rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
     supervisor: ['dashboard','tareos','almacen','epps'],
     almacen:    ['dashboard','almacen','epps'],
-    operario:   ['dashboard','tareos','adelantos','permisos'],
+    operario:   ['dashboard','tareos','adelantos','permisos','epps'],
   };
   const token      = localStorage.getItem('token');
   const rol        = localStorage.getItem('rol') || 'operario';
@@ -724,6 +724,29 @@ function toggleTheme() {
     if (icon)  icon.textContent  = saved === 'dark' ? '☀️' : '🌙';
     if (label) label.textContent = saved === 'dark' ? 'Modo claro' : 'Modo oscuro';
   });
+})();
+</script>
+<script>
+// -- AJUSTES POR ROL -- EPPs
+(function(){
+  var rol=localStorage.getItem('rol')||'operario';
+  if(rol==='operario'){
+    function ajustarOp(){
+      // Ocultar botones de entrega/tipo en topbar
+      var btns=document.querySelectorAll('.topbar .btn');
+      btns.forEach(function(b){b.style.display='none';});
+      // Ocultar tabs que no aplican al operario
+      var tabIds=['tab-vencer','tab-vencidos','tab-tipos'];
+      tabIds.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+      document.querySelectorAll('.main-tab').forEach(function(b){
+        var txt=(b.textContent||'');
+        if(txt.indexOf('Por vencer')>-1||txt.indexOf('Vencidos')>-1||txt.indexOf('Tipos')>-1)
+          b.style.display='none';
+      });
+    }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ajustarOp);
+    else ajustarOp();
+  }
 })();
 </script>
 <script src="notificaciones.js"></script>

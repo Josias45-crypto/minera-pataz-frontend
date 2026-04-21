@@ -26,7 +26,7 @@
     '.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;',
     'background:var(--red,#B83232);color:#fff;font-size:9px;font-weight:700;',
     'font-family:"JetBrains Mono",monospace;border-radius:8px;padding:0 4px;',
-    'display:flex;align-items:center;justify-content:center;',
+    'align-items:center;justify-content:center;',
     'border:1.5px solid var(--bg-panel,#fff);display:none;}',
 
     /* dropdown panel */
