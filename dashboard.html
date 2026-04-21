@@ -799,6 +799,7 @@
     </a>
   </div>
   <div class="sidebar-bottom">
+  <button onclick="toggleTheme()" id="theme-toggle" style="background:none;border:none;cursor:pointer;font-size:18px;padding:8px;border-radius:6px;color:inherit;margin-bottom:8px;width:100%;text-align:left;"><span id="theme-icon">🌙</span> <span id="theme-label">Modo oscuro</span></button>
     <div class="user-card">
       <div class="user-avatar" id="nav-avatar">AD</div>
       <div class="user-info">
@@ -1376,6 +1377,31 @@ function cerrarSesion(){
   } else {
     initResponsive();
   }
+})();
+</script>
+<script>
+/* ── Modo oscuro por usuario ── */
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme');
+  var next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  var user = localStorage.getItem('username') || 'default';
+  localStorage.setItem('theme_' + user, next);
+  var icon  = document.getElementById('theme-icon');
+  var label = document.getElementById('theme-label');
+  if (icon)  icon.textContent  = next === 'dark' ? '☀️' : '🌙';
+  if (label) label.textContent = next === 'dark' ? 'Modo claro' : 'Modo oscuro';
+}
+(function() {
+  var user  = localStorage.getItem('username') || 'default';
+  var saved = localStorage.getItem('theme_' + user) || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  window.addEventListener('DOMContentLoaded', function() {
+    var icon  = document.getElementById('theme-icon');
+    var label = document.getElementById('theme-label');
+    if (icon)  icon.textContent  = saved === 'dark' ? '☀️' : '🌙';
+    if (label) label.textContent = saved === 'dark' ? 'Modo claro' : 'Modo oscuro';
+  });
 })();
 </script>
 </body>
