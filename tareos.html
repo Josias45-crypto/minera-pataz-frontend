@@ -446,8 +446,8 @@
         <div class="tab-content active" id="tab-hoy">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Trabajador</th><th>Fotocheck</th><th>Turno</th><th>Hora entrada</th><th>Tardanza</th><th>Método</th><th>Estado</th></tr></thead>
-              <tbody id="tbody-hoy"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
+              <thead><tr><th>Trabajador</th><th>Fotocheck</th><th>Turno</th><th>Hora entrada</th><th>Tardanza</th><th>Método</th><th>Estado</th><th id="th-acciones" style="display:none"></th></tr></thead>
+              <tbody id="tbody-hoy"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">Cargando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -585,6 +585,36 @@
   </div>
 </div>
 
+<!-- MODAL REPORTE FRAUDE / NO VISTO EN MINA -->
+<div class="modal-overlay" id="modal-reporte" onclick="if(event.target===this)cerrarModalReporte()" style="z-index:300">
+  <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:440px;animation:modalIn .2s ease">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.04em" id="modal-reporte-titulo">Reporte</div>
+      <button onclick="cerrarModalReporte()" style="background:transparent;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-secondary)">✕</button>
+    </div>
+    <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px">
+        <div style="font-weight:600;color:var(--text-primary)" id="modal-reporte-nombre">—</div>
+        <div style="color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:2px" id="modal-reporte-fecha">—</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-secondary);font-family:'JetBrains Mono',monospace">Motivo *</label>
+        <textarea id="modal-reporte-motivo" rows="3"
+          style="background:var(--bg-card);border:1px solid var(--border);border-radius:5px;padding:9px 12px;color:var(--text-primary);font-size:13px;font-family:'Barlow',sans-serif;outline:none;resize:vertical;transition:border-color .2s"
+          placeholder="Describe el motivo del reporte..."
+          onfocus="this.style.borderColor='var(--orange)'"
+          onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey))enviarReporte()"></textarea>
+        <span style="font-size:10px;color:var(--text-muted)">Ctrl+Enter para enviar</span>
+      </div>
+    </div>
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="cerrarModalReporte()" style="padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-secondary);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor='var(--border-bright)'" onmouseout="this.style.borderColor='var(--border)'">Cancelar</button>
+      <button id="btn-enviar-reporte" onclick="enviarReporte()" style="padding:8px 18px;background:var(--red);color:#fff;border:none;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Enviar reporte</button>
+    </div>
+  </div>
+</div>
+
 <script src="config.js"></script>
 <script>
 const API = window.BACKEND_URL || 'http://127.0.0.1:8000';
@@ -714,8 +744,22 @@ function updateStats() {
 
 function renderTablaHoy(lista) {
   const tbody = document.getElementById('tbody-hoy');
+  const rol   = localStorage.getItem('rol') || 'operario';
+  const tid   = parseInt(localStorage.getItem('trabajador_id') || '0');
+  const puedeReportar = ['admin','rrhh','supervisor'].includes(rol);
+  const esSupervisor  = rol === 'supervisor';
+  const esOperario    = rol === 'operario';
+
+  // Mostrar/ocultar columna acciones
+  const thAcc = document.getElementById('th-acciones');
+  if (thAcc) thAcc.style.display = puedeReportar ? '' : 'none';
+
+  // Operario: filtrar solo su propia asistencia
+  if (esOperario && tid) lista = lista.filter(a => a.trabajador_id === tid);
+
+  const cols = puedeReportar ? 8 : 7;
   if (!lista.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">Sin registros hoy</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${cols}" style="text-align:center;padding:40px;color:var(--text-muted)">Sin registros hoy</td></tr>`;
     return;
   }
   const estadoMap = {
@@ -724,6 +768,7 @@ function renderTablaHoy(lista) {
     permiso: '<span class="badge blue">Permiso</span>',
     dobla:   '<span class="badge orange">Dobla</span>',
     descanso:'<span class="badge yellow">Descanso</span>',
+    fraude:  '<span class="badge red">Fraude</span>',
   };
   const metodoMap = {
     fotocheck: '<span class="badge blue">Fotocheck</span>',
@@ -732,11 +777,24 @@ function renderTablaHoy(lista) {
     huella:    '<span class="badge green">Huella</span>',
     nombre:    '<span class="badge blue">Nombre</span>',
   };
+  const fechaHoy = new Date().toISOString().slice(0,10);
   tbody.innerHTML = lista.map(a => {
     const t      = trabajadores.find(x => x.id === a.trabajador_id);
     const nombre = t ? `${t.apellidos}, ${t.nombres}` : `#${a.trabajador_id}`;
     const fc     = t ? (t.fotocheck_codigo || '—') : '—';
-    return `<tr>
+    let accionesHTML = '';
+    if (puedeReportar) {
+      accionesHTML = `<div style="display:flex;gap:4px;opacity:0;transition:opacity 0.15s" class="row-acciones-reporte">`;
+      if (!esSupervisor) {
+        accionesHTML += `<button class="action-btn" style="color:var(--red);border-color:var(--red-dim)" onclick="event.stopPropagation();abrirModalReporte('fraude',${a.trabajador_id},'${nombre}','${fechaHoy}')">Fraude</button>`;
+      }
+      if (esSupervisor) {
+        accionesHTML += `<button class="action-btn" onclick="event.stopPropagation();abrirModalReporte('no_visto',${a.trabajador_id},'${nombre}','${fechaHoy}')">No visto</button>`;
+        accionesHTML += `<button class="action-btn" style="color:var(--red);border-color:var(--red-dim)" onclick="event.stopPropagation();abrirModalReporte('fraude',${a.trabajador_id},'${nombre}','${fechaHoy}')">Fraude</button>`;
+      }
+      accionesHTML += `</div>`;
+    }
+    return `<tr onmouseenter="this.querySelector&&this.querySelector('.row-acciones-reporte')&&(this.querySelector('.row-acciones-reporte').style.opacity='1')" onmouseleave="this.querySelector&&this.querySelector('.row-acciones-reporte')&&(this.querySelector('.row-acciones-reporte').style.opacity='0')">
       <td>${nombre}</td>
       <td class="mono">${fc}</td>
       <td>${a.turno_id === 2 ? 'Noche' : 'Día'}</td>
@@ -744,6 +802,7 @@ function renderTablaHoy(lista) {
       <td>${a.tardanza_minutos > 0 ? `<span class="badge red">${a.tardanza_minutos} min</span>` : '—'}</td>
       <td>${metodoMap[a.metodo_registro] || a.metodo_registro || '—'}</td>
       <td>${estadoMap[a.estado] || a.estado}</td>
+      ${puedeReportar ? `<td>${accionesHTML}</td>` : ''}
     </tr>`;
   }).join('');
 }
@@ -865,7 +924,72 @@ function showToast(msg, type = 'success') {
   setTimeout(() => t.remove(), 3000);
 }
 
+// ── REPORTES FRAUDE / NO VISTO EN MINA ──────────────────────
+let _reporteTipo = '', _reporteTid = 0, _reporteFecha = '', _reporteNombre = '';
+
+function abrirModalReporte(tipo, trabajadorId, nombre, fecha) {
+  _reporteTipo   = tipo;
+  _reporteTid    = trabajadorId;
+  _reporteFecha  = fecha;
+  _reporteNombre = nombre;
+  const titulo = tipo === 'fraude' ? '⚠ Reportar Fraude de Asistencia' : '👁 Reportar: No visto en mina';
+  document.getElementById('modal-reporte-titulo').textContent = titulo;
+  document.getElementById('modal-reporte-nombre').textContent = nombre;
+  document.getElementById('modal-reporte-fecha').textContent  = fecha;
+  document.getElementById('modal-reporte-motivo').value = '';
+  document.getElementById('modal-reporte').classList.add('open');
+  setTimeout(() => document.getElementById('modal-reporte-motivo').focus(), 50);
+}
+
+function cerrarModalReporte() {
+  document.getElementById('modal-reporte').classList.remove('open');
+}
+
+async function enviarReporte() {
+  const motivo = document.getElementById('modal-reporte-motivo').value.trim();
+  if (!motivo) { showToast('El motivo es obligatorio', 'error'); return; }
+  const endpoint = _reporteTipo === 'fraude' ? '/reportes/fraude' : '/reportes/no-visto-mina';
+  const payload  = { trabajador_id: _reporteTid, fecha: _reporteFecha, motivo };
+  const btn = document.getElementById('btn-enviar-reporte');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+  const result = await apiFetch(endpoint, { method: 'POST', body: JSON.stringify(payload) });
+  btn.disabled = false;
+  btn.textContent = 'Enviar reporte';
+  if (result && result.id) {
+    cerrarModalReporte();
+    showToast(
+      _reporteTipo === 'fraude'
+        ? `Reporte de fraude enviado — Admin decidirá`
+        : `Reporte "no visto en mina" enviado`,
+      'success'
+    );
+  } else {
+    showToast('Error al enviar reporte', 'error');
+  }
+}
+
+// ── OPERARIO: MEJORAS DE MARCADO ─────────────────────────────
+function preRellenarCodigoOperario() {
+  const rol = localStorage.getItem('rol') || '';
+  if (rol !== 'operario') return;
+  const tid = parseInt(localStorage.getItem('trabajador_id') || '0');
+  if (!tid) return;
+  // Esperar a que trabajadores esté cargado, luego pre-rellenar
+  const t = trabajadores.find(x => x.id === tid);
+  if (t) {
+    const codigo = t.fotocheck_codigo || t.dni || '';
+    const inp = document.getElementById('input-codigo');
+    if (inp && !inp.value) inp.value = codigo;
+    // Pre-seleccionar en el selector de mes
+    const selMes = document.getElementById('sel-trabajador-mes');
+    if (selMes) selMes.value = tid;
+  }
+}
+
 init();
+// Pre-rellenar código del operario después de cargar trabajadores
+window.addEventListener('load', function() { setTimeout(preRellenarCodigoOperario, 800); });
 </script>
 
 <script>
@@ -885,10 +1009,15 @@ init();
   if(modulo && !permitidos.includes(modulo)){ alert('No tienes permiso para acceder a este módulo.'); window.location.href='index.html'; return; }
   document.querySelectorAll('.nav-item[data-modulo]').forEach(a=>{ if(!permitidos.includes(a.dataset.modulo)) a.style.display='none'; });
   document.querySelectorAll('.sidebar-section').forEach(sec=>{ const v=Array.from(sec.querySelectorAll('.nav-item')).filter(i=>i.style.display!=='none'); if(v.length===0) sec.style.display='none'; });
-  // Ocultar "Registrar Manual" para operarios — el backend rechazaría de todas formas
-  if(rol === 'operario'){
+  // Ocultar "Registrar Manual" para operarios y supervisores
+  if(rol === 'operario' || rol === 'supervisor'){
     const btnManual = document.getElementById('btn-manual');
     if(btnManual) btnManual.style.display = 'none';
+  }
+  // Operario: ocultar selectores de otros trabajadores en tab "Este mes"
+  if(rol === 'operario'){
+    const selTrabMes = document.getElementById('sel-trabajador-mes');
+    if(selTrabMes) selTrabMes.closest('div[style]') && (selTrabMes.style.display = 'none');
   }
 })();
 </script>
