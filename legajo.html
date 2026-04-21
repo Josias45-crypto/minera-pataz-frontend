@@ -788,5 +788,45 @@ function cerrarSesion(){
   window.location.href = 'login.html';
 }
 </script>
+
+<script>
+/* ── Responsive: sidebar hamburguesa ── */
+(function() {
+  function initResponsive() {
+    // Crear overlay si no existe
+    if (!document.querySelector('.sidebar-overlay')) {
+      var ov = document.createElement('div');
+      ov.className = 'sidebar-overlay';
+      ov.addEventListener('click', function() {
+        document.body.classList.remove('sidebar-open');
+      });
+      document.body.appendChild(ov);
+    }
+
+    // Crear botón hamburguesa si no existe
+    var topbar = document.querySelector('.topbar');
+    if (topbar && !topbar.querySelector('.hamburger-btn')) {
+      var btn = document.createElement('button');
+      btn.className = 'hamburger-btn';
+      btn.setAttribute('aria-label', 'Menú');
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+        + '<line x1="3" y1="6" x2="21" y2="6"/>'
+        + '<line x1="3" y1="12" x2="21" y2="12"/>'
+        + '<line x1="3" y1="18" x2="21" y2="18"/>'
+        + '</svg>';
+      btn.addEventListener('click', function() {
+        document.body.classList.toggle('sidebar-open');
+      });
+      topbar.insertBefore(btn, topbar.firstChild);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initResponsive);
+  } else {
+    initResponsive();
+  }
+})();
+</script>
 </body>
 </html>

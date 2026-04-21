@@ -1,62 +1,215 @@
-/* ── RESPONSIVE GLOBAL — MINERA PATAZ ── */
+/* ═══════════════════════════════════════════════════
+   MINERA PATAZ — Responsive Mobile
+   Breakpoints: 768px tablet/móvil, 480px móvil pequeño
+   REGLA: Solo media queries. No toca CSS existente.
+═══════════════════════════════════════════════════ */
 
-/* Tablet (max 1024px) */
-@media (max-width: 1024px) {
-  .sidebar { width: 200px; }
-  .main-content { margin-left: 200px; }
+/* ── BOTÓN HAMBURGUESA ──────────────────────────────
+   Se inyecta vía JS en el topbar. Oculto en desktop. */
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 5px;
+  padding: 5px 8px;
+  cursor: pointer;
+  color: inherit;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+}
+.hamburger-btn svg { width: 18px; height: 18px; display: block; }
+
+/* ── OVERLAY DE SIDEBAR ─────────────────────────────
+   Aparece detrás del sidebar en móvil. */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 49;
+  cursor: pointer;
 }
 
-/* Mobile/pequeño (max 768px) */
+/* ══ TABLET Y MÓVIL (max 768px) ════════════════════ */
 @media (max-width: 768px) {
-  .sidebar { display: none; }
-  .main-content { margin-left: 0 !important; }
-  .topbar { padding: 0 12px; }
 
-  /* Grids de 2 columnas → 1 columna */
-  .catalogos-grid,
-  .stats-grid,
-  .grid-2,
-  .form-grid,
-  .params-grid {
-    grid-template-columns: 1fr !important;
+  /* ── HAMBURGUESA VISIBLE ── */
+  .hamburger-btn { display: flex; }
+
+  /* ── SIDEBAR: oculto por defecto, desliza desde izquierda ── */
+  .sidebar,
+  aside.sidebar {
+    transform: translateX(-100%) !important;
+    transition: transform 0.28s ease !important;
+    z-index: 50 !important;
   }
 
-  /* Tarjetas de stats */
-  .stat-cards, .kpi-row {
+  /* Sidebar abierto (clase .sidebar-open en body) */
+  body.sidebar-open .sidebar,
+  body.sidebar-open aside.sidebar {
+    transform: translateX(0) !important;
+  }
+
+  /* Overlay visible cuando sidebar abierto */
+  body.sidebar-open .sidebar-overlay {
+    display: block;
+  }
+
+  /* ── CONTENIDO PRINCIPAL: sin margen izquierdo ── */
+  .main,
+  main.main,
+  div.main,
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* ── TOPBAR: flex-wrap para que no se corte ── */
+  .topbar,
+  header.topbar {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    min-height: 52px !important;
+    padding: 8px 12px !important;
+    gap: 8px !important;
+  }
+
+  /* ── GRIDS DE MÉTRICAS: 2 columnas ── */
+  .stats-grid,
+  .stats-row,
+  .totales-grid,
+  .cards-grid {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  /* Tablas: scroll horizontal */
-  .table-wrap, .table-responsive {
-    overflow-x: auto !important;
+  /* ── GRIDS DE LAYOUT: apilados ── */
+  .grid-2,
+  .grid-3,
+  .grid-main,
+  .catalogos-grid,
+  .params-grid,
+  .permisos-grid,
+  .info-grid,
+  .form-grid,
+  .ficha-grid,
+  .layout {
+    grid-template-columns: 1fr !important;
   }
 
-  /* Panels full width */
-  .panel { min-width: 0; }
+  /* Layout con altura fija → auto en móvil */
+  .layout {
+    height: auto !important;
+  }
 
-  /* inline-form wrap */
-  .inline-form { flex-wrap: wrap !important; }
-
-  /* Modales full width */
-  .modal-box, .modal-content {
-    width: 95vw !important;
-    max-width: 95vw !important;
+  /* ── MODALES: 95% ancho ── */
+  .modal,
+  .modal-box,
+  .modal-content,
+  [class*="modal"]:not(.modal-overlay):not(.modal-header):not(.modal-body):not(.modal-footer):not(.modal-title):not(.modal-close):not(.modal-foot):not(.modal-hdr):not(.modal-ttl):not(.modal-actions):not(.modal-x) {
+    width: 95% !important;
+    max-width: 95% !important;
     margin: 10px auto !important;
   }
 
-  /* Topbar título */
-  .page-title { font-size: 16px !important; }
+  /* ── TABLAS: scroll horizontal ── */
+  .table-wrap,
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
 
-  /* Botones topbar */
-  .topbar-actions { gap: 6px !important; }
-  .topbar-actions .btn span { display: none; }
+  /* Tablas: evitar que compriman demasiado */
+  .table-wrap table,
+  .table-responsive table {
+    min-width: 500px;
+  }
+
+  /* ── BOTONES DE ACCIÓN: tamaño reducido ── */
+  .btn,
+  button.btn {
+    font-size: 12px !important;
+    padding: 7px 11px !important;
+  }
+
+  /* ── CONTENT: padding reducido ── */
+  .content,
+  .main-content,
+  .page-content {
+    padding: 12px !important;
+  }
+
+  /* ── TOPBAR: ocultar elementos secundarios ── */
+  .topbar-date,
+  .topbar-live,
+  .live-badge,
+  .clock-dev {
+    display: none !important;
+  }
+
+  /* ── TOOLBAR: wrap ── */
+  .toolbar {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* ── INLINE FORMS: wrap ── */
+  .inline-form {
+    flex-wrap: wrap !important;
+  }
+
+  /* ── DOCS GRID: 2 columnas ── */
+  .docs-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── LEGAJO LAYOUT: columna derecha visible ── */
+  .detail-col {
+    overflow-y: visible !important;
+  }
+
+  /* ── MÓDULOS GRID (index.html): 2 columnas ── */
+  .modules-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── TOPBAR DE INDEX/ALERTAS: ocultar extras ── */
+  .hero-stats,
+  .topbar-right .clock,
+  .topbar-right .live-badge {
+    display: none !important;
+  }
 }
 
-/* Pantalla muy pequeña (max 480px) */
+/* ══ MÓVIL PEQUEÑO (max 480px) ═════════════════════ */
 @media (max-width: 480px) {
-  .stat-cards, .kpi-row {
+
+  /* ── MÉTRICAS: 1 columna ── */
+  .stats-grid,
+  .stats-row,
+  .totales-grid,
+  .cards-grid {
     grid-template-columns: 1fr !important;
   }
-  .tabs { flex-wrap: wrap; gap: 4px; }
-  .main-tab { font-size: 11px !important; padding: 6px 10px !important; }
+
+  /* ── MÓDULOS: 1 columna ── */
+  .modules-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── DOCS: 1 columna ── */
+  .docs-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── FICHA GRID: 2 columnas ── */
+  .ficha-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── TOPBAR TITLE: tamaño reducido ── */
+  .topbar-title,
+  .page-title {
+    font-size: 15px !important;
+  }
 }
