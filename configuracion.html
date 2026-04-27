@@ -595,50 +595,148 @@ async function guardarPassword(id){
   else showToast('Error al cambiar contraseña','error');
 }
 
+// ── ROLES QUE NECESITAN TRABAJADOR VINCULADO ──────────────
+const ROLES_CON_TRABAJADOR = ['rrhh','supervisor','almacen','operario'];
+
 // ── MODAL USUARIO (nuevo/editar) ──────────────────────────
-function openModal(type, id=null){
+async function openModal(type, id=null){
   const u = id ? usuarios.find(x=>x.id===id) : null;
   document.getElementById('modal-title').textContent = u ? 'Editar Usuario' : 'Nuevo Usuario';
+
+  // Cargar trabajadores sin cuenta (solo para usuarios nuevos)
+  let trabSinCuenta = [];
+  if(!u){
+    trabSinCuenta = await apiFetch('/auth/trabajadores-sin-cuenta') || [];
+  }
+
+  const opcionesTrab = trabSinCuenta.length
+    ? trabSinCuenta.map(t =>
+        `<option value="${t.id}">${t.nombre} — DNI ${t.dni} (${t.cargo})</option>`
+      ).join('')
+    : '<option value="">Sin trabajadores disponibles</option>';
+
   document.getElementById('modal-body').innerHTML=`
     <div class="form-grid">
+
       <div class="form-group"><label class="form-label">Username *</label>
-        <input type="text" class="form-input" id="f-username" value="${u?.username||''}" placeholder="rrhh"></div>
+        <input type="text" class="form-input" id="f-username"
+               value="${u?.username||''}" placeholder="ej: joel.rojas"></div>
+
       <div class="form-group"><label class="form-label">Rol *</label>
-        <select class="form-select" id="f-rol">
+        <select class="form-select" id="f-rol" onchange="toggleTrabajadorField()">
           <option value="1" ${u?.rol_id===1?'selected':''}>Administrador</option>
           <option value="2" ${u?.rol_id===2?'selected':''}>RRHH</option>
           <option value="3" ${u?.rol_id===3?'selected':''}>Supervisor</option>
           <option value="4" ${u?.rol_id===4?'selected':''}>Almacén</option>
           <option value="5" ${u?.rol_id===5?'selected':''}>Operario</option>
         </select></div>
-      <div class="form-group full"><label class="form-label">Nombre completo</label>
-        <input type="text" class="form-input" id="f-nombre" value="${u?.nombre_completo||''}" placeholder="Juan Pérez"></div>
-      ${!u?`
+
+      ${!u ? `
+      <div class="form-group full" id="campo-trabajador">
+        <label class="form-label">Trabajador vinculado *
+          <span style="font-weight:400;color:var(--text-muted)">(obligatorio para este rol)</span>
+        </label>
+        <select class="form-select" id="f-trabajador" onchange="sugerirUsername()">
+          <option value="">— Seleccionar trabajador —</option>
+          ${opcionesTrab}
+        </select>
+        ${trabSinCuenta.length===0
+          ? `<div style="margin-top:6px;font-size:11px;color:var(--red)">
+               ⚠ Todos los trabajadores ya tienen cuenta, o no hay trabajadores registrados.
+             </div>`
+          : `<div style="margin-top:4px;font-size:11px;color:var(--text-muted)">
+               Solo aparecen trabajadores activos sin cuenta.
+             </div>`
+        }
+      </div>
+
       <div class="form-group full"><label class="form-label">Contraseña *</label>
-        <input type="password" class="form-input" id="f-password" placeholder="Mínimo 6 caracteres"></div>`:''}
+        <input type="password" class="form-input" id="f-password"
+               placeholder="Mínimo 6 caracteres"></div>
+      ` : ''}
+
     </div>`;
+
   document.getElementById('modal-footer').innerHTML=`
     <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-    <button class="btn btn-primary" onclick="guardarUsuario(${id||'null'})">${u?'Guardar cambios':'Crear usuario'}</button>`;
+    <button class="btn btn-primary" onclick="guardarUsuario(${id||'null'})">
+      ${u?'Guardar cambios':'Crear cuenta'}
+    </button>`;
+
   document.getElementById('modal-overlay').classList.add('open');
+
+  // Aplicar visibilidad inicial del campo trabajador
+  if(!u) toggleTrabajadorField();
+}
+
+function toggleTrabajadorField(){
+  const sel  = document.getElementById('f-rol');
+  const campo = document.getElementById('campo-trabajador');
+  if(!sel || !campo) return;
+  const rolNombre = sel.options[sel.selectedIndex]?.text?.toLowerCase() || '';
+  // Admin no necesita trabajador
+  const necesita = !rolNombre.includes('admin');
+  campo.style.display = necesita ? 'flex' : 'none';
+  if(!necesita){
+    const st = document.getElementById('f-trabajador');
+    if(st) st.value = '';
+  }
+}
+
+function sugerirUsername(){
+  const sel = document.getElementById('f-trabajador');
+  if(!sel || !sel.value) return;
+  const texto = sel.options[sel.selectedIndex].text; // "APELLIDO, Nombres — DNI ..."
+  // Tomar apellido y primer nombre → sugerir username
+  const partes = texto.split('—')[0].trim().split(',');
+  if(partes.length >= 2){
+    const apellido = partes[0].trim().split(' ')[0].toLowerCase();
+    const nombre   = partes[1].trim().split(' ')[0].toLowerCase();
+    const usuario  = document.getElementById('f-username');
+    if(usuario && !usuario.value) usuario.value = `${nombre}.${apellido}`;
+  }
 }
 
 async function guardarUsuario(id){
-  const username=document.getElementById('f-username').value.trim();
-  const rol=document.getElementById('f-rol').value;
-  const nombre=document.getElementById('f-nombre').value.trim();
-  if(!username||!rol){showToast('Username y rol son obligatorios','error');return;}
+  const username = document.getElementById('f-username')?.value.trim();
+  const rolId    = parseInt(document.getElementById('f-rol')?.value);
+  if(!username){ showToast('El username es obligatorio','error'); return; }
+  if(!rolId){    showToast('Selecciona un rol','error'); return; }
 
-  let r;
   if(id){
-    showToast('Edición de usuarios no disponible en esta versión','warning'); return;
-  }else{
-    const pass=document.getElementById('f-password').value;
-    if(!pass||pass.length<6){showToast('Contraseña mínimo 6 caracteres','error');return;}
-    r=await apiFetch('/auth/usuarios',{method:'POST',body:JSON.stringify({username,password:pass,rol_id:parseInt(document.getElementById('f-rol').value)})});
+    // Editar: solo rol por ahora
+    const r = await apiFetch(`/auth/usuarios/${id}`, {
+      method:'PATCH',
+      body: JSON.stringify({ rol_id: rolId })
+    });
+    if(r){ showToast('Usuario actualizado','success'); closeModal(); await loadUsuarios(); }
+    else   showToast('Error al actualizar','error');
+    return;
   }
-  if(r){showToast(id?'Usuario actualizado':'Usuario creado','success');closeModal();await loadUsuarios();}
-  else showToast('Error — el username puede estar en uso','error');
+
+  // Nuevo usuario
+  const pass = document.getElementById('f-password')?.value || '';
+  if(pass.length < 6){ showToast('Contraseña mínimo 6 caracteres','error'); return; }
+
+  const rolNombre = document.getElementById('f-rol')
+    ?.options[document.getElementById('f-rol').selectedIndex]?.text?.toLowerCase() || '';
+  const necesitaTrabajador = !rolNombre.includes('admin');
+
+  let trabajadorId = null;
+  if(necesitaTrabajador){
+    const selTrab = document.getElementById('f-trabajador');
+    if(!selTrab?.value){
+      showToast('Debes seleccionar el trabajador para este rol','error'); return;
+    }
+    trabajadorId = parseInt(selTrab.value);
+  }
+
+  const body = { username, password: pass, rol_id: rolId };
+  if(trabajadorId) body.trabajador_id = trabajadorId;
+
+  const r = await apiFetch('/auth/usuarios', { method:'POST', body: JSON.stringify(body) });
+  if(r){ showToast('Cuenta creada exitosamente','success'); closeModal(); await loadUsuarios(); }
+  else   showToast('Error — el username puede estar en uso','error');
 }
 
 // ── CATÁLOGOS ─────────────────────────────────────────────
