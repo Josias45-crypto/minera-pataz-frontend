@@ -318,9 +318,9 @@
     /* carga inicial */
     loadNotifications();
 
-    /* auto-refresco cada 30 segundos */
+    /* auto-refresco cada 60 segundos */
     if (_interval) clearInterval(_interval);
-    _interval = setInterval(loadNotifications, 30000);
+    _interval = setInterval(loadNotifications, 60000);
   }
 
   if (document.readyState === 'loading') {
