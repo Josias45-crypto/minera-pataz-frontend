@@ -583,6 +583,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar
       </button>
+      <button class="btn btn-ghost" onclick="abrirImportarExcel()" title="Importar trabajadores desde Excel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="8 13 12 17 16 13"/><line x1="12" y1="17" x2="12" y2="9"/></svg>
+        Importar Excel
+      </button>
       <button class="btn btn-primary" onclick="openModal()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Nuevo Trabajador
@@ -625,6 +629,73 @@
     </div>
   </div>
 </main>
+
+<!-- ── MODAL IMPORTAR EXCEL ────────────────────────────── -->
+<div class="modal-overlay" id="modal-excel" onclick="if(event.target===this)cerrarModalExcel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)">
+  <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;width:100%;max-width:560px;animation:modalIn 0.25s cubic-bezier(0.34,1.56,0.64,1)">
+
+    <!-- HEADER -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em">Importar desde Excel</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">El sistema leerá el archivo y creará los trabajadores automáticamente</div>
+      </div>
+      <button onclick="cerrarModalExcel()" style="width:28px;height:28px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- COLUMNAS QUE SE LEEN -->
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);background:var(--bg-card)">
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px">Columnas que se importan del Excel</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">N°</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">ESTADO</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">TURNO</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">NOMBRES</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">APELLIDOS</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">DNI</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">SOCIO</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">CARGO RTBL</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">C. DIARIO</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">CORREO</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">DIRECCIÓN</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">F. INICIO PASE</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:2px 7px">F. FIN PASE</span>
+      </div>
+    </div>
+
+    <!-- ZONA DE CARGA -->
+    <div style="padding:20px">
+
+      <!-- Drop zone -->
+      <div id="drop-zone" onclick="document.getElementById('file-excel').click()"
+        style="border:2px dashed var(--border);border-radius:8px;padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--bg-card)"
+        ondragover="event.preventDefault();this.style.borderColor='var(--orange)';this.style.background='var(--orange-glow)'"
+        ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--bg-card)'"
+        ondrop="onDrop(event)">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.5" style="margin-bottom:10px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="8 13 12 17 16 13"/><line x1="12" y1="17" x2="12" y2="9"/></svg>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em">Arrastra tu archivo Excel aquí</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">o haz clic para seleccionar — solo .xlsx</div>
+        <div id="file-name-display" style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--orange);display:none"></div>
+      </div>
+      <input type="file" id="file-excel" accept=".xlsx,.xls" style="display:none" onchange="onFileSelected(event)">
+
+      <!-- Resultado -->
+      <div id="import-result" style="display:none;margin-top:16px"></div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div style="padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="cerrarModalExcel()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary)">Cerrar</button>
+      <button id="btn-importar" onclick="ejecutarImportacion()"
+        style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border:none;background:var(--orange);color:#000"
+        disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="8 13 12 17 16 13"/><line x1="12" y1="17" x2="12" y2="9"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+        <span id="btn-importar-txt">Importar</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- ── MODAL NUEVO/EDITAR ──────────────────────────────── -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
@@ -1361,5 +1432,178 @@ function toggleTheme() {
 })();
 </script>
 <script src="notificaciones.js"></script>
+
+<script>
+// ── IMPORTAR EXCEL ─────────────────────────────────────────────────────
+const API_EXCEL = window.BACKEND_URL || 'http://127.0.0.1:8000';
+let archivoExcel = null;
+
+function abrirImportarExcel() {
+  archivoExcel = null;
+  document.getElementById('file-excel').value = '';
+  document.getElementById('file-name-display').style.display = 'none';
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('btn-importar').disabled = true;
+  document.getElementById('btn-importar-txt').textContent = 'Importar';
+  const dz = document.getElementById('drop-zone');
+  dz.style.borderColor = 'var(--border)';
+  dz.style.background  = 'var(--bg-card)';
+  document.getElementById('modal-excel').style.display = 'flex';
+}
+
+function cerrarModalExcel() {
+  document.getElementById('modal-excel').style.display = 'none';
+}
+
+function onFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  setArchivoExcel(file);
+}
+
+function onDrop(event) {
+  event.preventDefault();
+  const dz = document.getElementById('drop-zone');
+  dz.style.borderColor = 'var(--border)';
+  dz.style.background  = 'var(--bg-card)';
+  const file = event.dataTransfer.files[0];
+  if (!file) return;
+  if (!file.name.match(/\.(xlsx|xls)$/i)) {
+    mostrarResultadoError('Solo se aceptan archivos .xlsx o .xls');
+    return;
+  }
+  setArchivoExcel(file);
+}
+
+function setArchivoExcel(file) {
+  archivoExcel = file;
+  const display = document.getElementById('file-name-display');
+  display.textContent = '📄 ' + file.name + '  (' + (file.size / 1024).toFixed(1) + ' KB)';
+  display.style.display = 'block';
+  document.getElementById('btn-importar').disabled = false;
+  document.getElementById('import-result').style.display = 'none';
+}
+
+async function ejecutarImportacion() {
+  if (!archivoExcel) return;
+
+  const btn = document.getElementById('btn-importar');
+  const txt = document.getElementById('btn-importar-txt');
+  btn.disabled = true;
+  txt.textContent = 'Importando...';
+
+  const formData = new FormData();
+  formData.append('archivo', archivoExcel);
+
+  try {
+    const res = await fetch(API_EXCEL + '/trabajadores/importar-excel', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') },
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      mostrarResultadoError(data.detail || 'Error al importar');
+      btn.disabled = false;
+      txt.textContent = 'Importar';
+      return;
+    }
+
+    mostrarResultadoOK(data);
+    // Recargar tabla de trabajadores
+    if (typeof cargarTrabajadores === 'function') cargarTrabajadores();
+
+  } catch (err) {
+    mostrarResultadoError('No se pudo conectar al servidor: ' + err.message);
+    btn.disabled = false;
+    txt.textContent = 'Importar';
+  }
+}
+
+function mostrarResultadoOK(data) {
+  const btn = document.getElementById('btn-importar');
+  const txt = document.getElementById('btn-importar-txt');
+  btn.disabled = true;
+  txt.textContent = 'Importado';
+
+  const div = document.getElementById('import-result');
+
+  const filaCreados = data.detalle_creados.slice(0, 8).map(c =>
+    `<tr>
+      <td style="padding:4px 8px;font-size:11px;font-family:'JetBrains Mono',monospace">${c.dni}</td>
+      <td style="padding:4px 8px;font-size:11px">${c.nombre}</td>
+      <td style="padding:4px 8px;font-size:11px;color:var(--text-muted)">${c.cargo}</td>
+      <td style="padding:4px 8px;font-size:11px;text-align:center">
+        <span style="background:${c.activo ? 'var(--green-dim)' : 'var(--red-dim)'};color:${c.activo ? 'var(--green)' : 'var(--red)'};padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700">${c.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+      </td>
+     </tr>`
+  ).join('');
+
+  const masCreados = data.creados > 8
+    ? `<tr><td colspan="4" style="padding:6px 8px;font-size:10px;color:var(--text-muted);font-style:italic">... y ${data.creados - 8} más</td></tr>`
+    : '';
+
+  const filaErrores = data.detalle_errores.length
+    ? `<div style="margin-top:10px;padding:10px;background:var(--red-dim);border:1px solid var(--red);border-radius:6px;font-size:11px;color:var(--red)">
+        <strong>${data.errores} error(es):</strong>
+        ${data.detalle_errores.map(e => `<div style="margin-top:3px">Fila ${e.fila}: ${e.error}</div>`).join('')}
+       </div>`
+    : '';
+
+  const filaOmitidos = data.omitidos
+    ? `<div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
+        ${data.omitidos} fila(s) omitida(s) por DNI ya registrado.
+       </div>`
+    : '';
+
+  div.innerHTML = `
+    <!-- Resumen -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:var(--green-dim);border:1px solid var(--green);border-radius:6px;padding:10px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--green)">${data.creados}</div>
+        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:0.08em">Creados</div>
+      </div>
+      <div style="background:var(--yellow-dim);border:1px solid var(--yellow);border-radius:6px;padding:10px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--yellow)">${data.omitidos}</div>
+        <div style="font-size:10px;color:var(--yellow);text-transform:uppercase;letter-spacing:0.08em">Omitidos</div>
+      </div>
+      <div style="background:${data.errores > 0 ? 'var(--red-dim)' : 'var(--bg-card)'};border:1px solid ${data.errores > 0 ? 'var(--red)' : 'var(--border)'};border-radius:6px;padding:10px;text-align:center">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:${data.errores > 0 ? 'var(--red)' : 'var(--text-muted)'}">${data.errores}</div>
+        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em">Errores</div>
+      </div>
+    </div>
+    ${data.creados > 0 ? `
+    <!-- Tabla de creados -->
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Trabajadores creados</div>
+    <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden;max-height:200px;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse">
+        <thead style="background:var(--bg-card)">
+          <tr>
+            <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text-muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">DNI</th>
+            <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text-muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Nombre</th>
+            <th style="padding:6px 8px;text-align:left;font-size:9px;color:var(--text-muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Cargo</th>
+            <th style="padding:6px 8px;text-align:center;font-size:9px;color:var(--text-muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase">Estado</th>
+          </tr>
+        </thead>
+        <tbody>${filaCreados}${masCreados}</tbody>
+      </table>
+    </div>` : ''}
+    ${filaOmitidos}
+    ${filaErrores}
+  `;
+  div.style.display = 'block';
+}
+
+function mostrarResultadoError(msg) {
+  const div = document.getElementById('import-result');
+  div.innerHTML = `
+    <div style="padding:12px;background:var(--red-dim);border:1px solid var(--red);border-radius:6px;font-size:12px;color:var(--red)">
+      <strong>Error:</strong> ${msg}
+    </div>`;
+  div.style.display = 'block';
+}
+</script>
 </body>
 </html>
