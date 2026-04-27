@@ -228,6 +228,8 @@
 </style>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="responsive.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 
 <body data-modulo="planilla">
@@ -321,7 +323,11 @@
     <div style="margin-left:auto;display:flex;gap:8px">
       <button class="btn btn-ghost" onclick="exportarCSV()" id="btn-exportar" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar CSV
+        CSV
+      </button>
+      <button class="btn btn-ghost" onclick="generarPDFCierre()" id="btn-pdf" disabled title="Descargar PDF de esta planilla">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        PDF
       </button>
       <button class="btn btn-success" onclick="calcularPlanilla()" id="btn-calcular">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -542,6 +548,7 @@ async function onPeriodoChange() {
   document.getElementById('fecha-cierre-info').textContent = '';
   document.getElementById('btn-cerrar').disabled = true;
   document.getElementById('btn-exportar').disabled = true;
+  document.getElementById('btn-pdf').disabled = true;
   await loadPlanilla();
 }
 
@@ -606,6 +613,7 @@ function updateEstadoBadge(p) {
     document.getElementById('btn-calcular').disabled = false;
   }
   document.getElementById('btn-exportar').disabled = false;
+  document.getElementById('btn-pdf').disabled = false;
 }
 
 function renderTabla() {
@@ -867,14 +875,210 @@ async function confirmarCierre() {
     showToast(`${negativos.length} trabajador(es) con neto negativo. Revisa antes de cerrar.`, 'error');
     return;
   }
-  if (!confirm(`¿Cerrar la planilla de ${meses[getMes()]} ${getAnio()}?\n\nEsta acción es IRREVERSIBLE.`)) return;
+  const mes  = getMes();
+  const anio = getAnio();
+  if (!confirm(
+    `¿Cerrar la planilla de ${meses[mes]} ${anio}?\n\n` +
+    `Esta acción es IRREVERSIBLE.\n` +
+    `Se descargará el PDF de cierre automáticamente.`
+  )) return;
 
-  const r = await apiFetch(`/planilla/cerrar?mes=${getMes()}&anio=${getAnio()}`, { method:'POST' });
+  const btnCerrar = document.getElementById('btn-cerrar');
+  btnCerrar.disabled  = true;
+  btnCerrar.innerHTML = 'Cerrando...';
+
+  const r = await apiFetch(`/planilla/cerrar?mes=${mes}&anio=${anio}`, { method:'POST' });
+
   if (r) {
-    showToast('Planilla cerrada y bloqueada', 'success');
     updateEstadoBadge(r);
+    showToast('Planilla cerrada. Generando PDF...', 'success');
+    setTimeout(() => generarPDFCierre(), 600);
   } else {
+    btnCerrar.disabled  = false;
+    btnCerrar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Cerrar Planilla`;
     showToast('Error al cerrar la planilla', 'error');
+  }
+}
+
+// ── PDF DE CIERRE ─────────────────────────────────────────
+function generarPDFCierre() {
+  if (!detalles.length) { showToast('Sin datos para el PDF', 'error'); return; }
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const mes       = getMes();
+    const anio      = getAnio();
+    const mesNombre = meses[mes];
+    const usuario   = localStorage.getItem('username') || 'admin';
+    const now       = new Date();
+    const fechaStr  = now.toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const horaStr   = now.toLocaleTimeString('es-PE',  { hour:'2-digit', minute:'2-digit' });
+
+    // ── FRANJA NARANJA SUPERIOR ─────────────────────────
+    doc.setFillColor(201, 150, 12);
+    doc.rect(0, 0, 297, 22, 'F');
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(17);
+    doc.setFont('helvetica', 'bold');
+    doc.text('MINERA PATAZ SAC', 14, 12);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('PLANILLA MENSUAL DE REMUNERACIONES — RÉGIMEN 30×12', 14, 19);
+
+    // ── FRANJA OSCURA CON INFO ──────────────────────────
+    doc.setFillColor(30, 37, 53);
+    doc.rect(0, 22, 297, 10, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Período: ${mesNombre.toUpperCase()} ${anio}`, 14, 28);
+    doc.text(`Cerrada por: ${usuario.toUpperCase()}`, 110, 28);
+    doc.text(`Fecha y hora de cierre: ${fechaStr}  ${horaStr}`, 190, 28);
+
+    // ── TABLA DE TRABAJADORES ───────────────────────────
+    const head = [[
+      'N°', 'Trabajador', 'DNI',
+      'D.Norm', 'D.Libr', 'D.Dobla',
+      'Bruto S/.', 'Adelantos', 'AFP/ONP', 'Desc.Adic.',
+      'NETO S/.'
+    ]];
+
+    let totBruto = 0, totAdel = 0, totPens = 0, totDescAd = 0, totNeto = 0;
+
+    const body = detalles.map((d, i) => {
+      const t      = trabajadores.find(x => x.id === d.trabajador_id);
+      const nom    = t ? `${t.apellidos}, ${t.nombres}` : `Trab. #${d.trabajador_id}`;
+      const bruto  = parseFloat(d.sueldo_bruto);
+      const adel   = parseFloat(d.descuento_adelantos);
+      const pens   = parseFloat(d.descuento_pension);
+      const descAd = parseFloat(d.descuentos_adicionales || 0);
+      const neto   = parseFloat(d.sueldo_neto);
+
+      totBruto  += bruto;
+      totAdel   += adel;
+      totPens   += pens;
+      totDescAd += descAd;
+      totNeto   += neto;
+
+      return [
+        i + 1,
+        nom.length > 38 ? nom.substring(0, 38) + '…' : nom,
+        t ? t.dni : '—',
+        d.dias_normales,
+        d.dias_libres_pagados || 12,
+        d.dias_dobla,
+        bruto.toFixed(2),
+        adel > 0   ? `(${adel.toFixed(2)})`   : '—',
+        `(${pens.toFixed(2)})`,
+        descAd > 0 ? `(${descAd.toFixed(2)})` : '—',
+        neto.toFixed(2),
+      ];
+    });
+
+    // Fila totales
+    body.push([
+      '', 'TOTALES — ' + detalles.length + ' trabajador(es)', '', '', '', '',
+      totBruto.toFixed(2),
+      `(${totAdel.toFixed(2)})`,
+      `(${totPens.toFixed(2)})`,
+      totDescAd > 0 ? `(${totDescAd.toFixed(2)})` : '—',
+      totNeto.toFixed(2),
+    ]);
+
+    doc.autoTable({
+      head,
+      body,
+      startY: 36,
+      styles:      { fontSize: 7.5, cellPadding: 2 },
+      headStyles:  { fillColor: [30,37,53], textColor: [255,255,255], fontStyle:'bold', halign:'center' },
+      columnStyles: {
+        0:  { halign:'center', cellWidth: 8 },
+        1:  { cellWidth: 62 },
+        2:  { halign:'center', cellWidth: 20 },
+        3:  { halign:'right',  cellWidth: 15 },
+        4:  { halign:'right',  cellWidth: 14 },
+        5:  { halign:'right',  cellWidth: 15 },
+        6:  { halign:'right',  cellWidth: 24, textColor:[26,122,74] },
+        7:  { halign:'right',  cellWidth: 22, textColor:[184,50,50] },
+        8:  { halign:'right',  cellWidth: 20, textColor:[184,50,50] },
+        9:  { halign:'right',  cellWidth: 20, textColor:[184,50,50] },
+        10: { halign:'right',  cellWidth: 24, textColor:[26,122,74] },
+      },
+      didParseCell: function(data) {
+        if (data.row.index === detalles.length) {
+          data.cell.styles.fontStyle  = 'bold';
+          data.cell.styles.fillColor  = [255, 248, 230];
+          data.cell.styles.textColor  = [150, 100, 0];
+        }
+      },
+      alternateRowStyles: { fillColor: [244, 245, 248] },
+      margin: { left: 14, right: 14 },
+    });
+
+    // ── RESUMEN INFERIOR ────────────────────────────────
+    const finalY = doc.lastAutoTable.finalY + 8;
+    const totDesc = totAdel + totPens + totDescAd;
+
+    // Caja neto (verde)
+    doc.setFillColor(26, 122, 74);
+    doc.roundedRect(14, finalY, 80, 16, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL NETO A PAGAR', 16, finalY + 6);
+    doc.setFontSize(13);
+    doc.text(`S/. ${totNeto.toFixed(2)}`, 16, finalY + 13);
+
+    // Caja bruto
+    doc.setFillColor(244, 245, 248);
+    doc.roundedRect(100, finalY, 55, 16, 2, 2, 'F');
+    doc.setTextColor(30, 37, 53);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL BRUTO', 102, finalY + 6);
+    doc.setFontSize(11);
+    doc.text(`S/. ${totBruto.toFixed(2)}`, 102, finalY + 13);
+
+    // Caja descuentos
+    doc.setFillColor(252, 234, 234);
+    doc.roundedRect(161, finalY, 58, 16, 2, 2, 'F');
+    doc.setTextColor(184, 50, 50);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL DESCUENTOS', 163, finalY + 6);
+    doc.setFontSize(11);
+    doc.text(`S/. ${totDesc.toFixed(2)}`, 163, finalY + 13);
+
+    // Caja trabajadores
+    doc.setFillColor(232, 239, 248);
+    doc.roundedRect(225, finalY, 58, 16, 2, 2, 'F');
+    doc.setTextColor(26, 74, 138);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TRABAJADORES', 227, finalY + 6);
+    doc.setFontSize(18);
+    doc.text(String(detalles.length), 227, finalY + 14);
+
+    // ── PIE DE PÁGINA ───────────────────────────────────
+    const pH = doc.internal.pageSize.getHeight();
+    doc.setFontSize(7);
+    doc.setTextColor(160, 160, 160);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Sistema Integral Minero Pataz v1.3.0  |  Generado: ${fechaStr} ${horaStr}  |  Usuario: ${usuario}  |  Registro oficial de planilla cerrada — período ${mesNombre} ${anio}`,
+      14, pH - 5
+    );
+
+    doc.save(`planilla_${mesNombre}_${anio}_cierre.pdf`);
+    showToast(`PDF descargado: planilla_${mesNombre}_${anio}_cierre.pdf`, 'success');
+
+  } catch (err) {
+    console.error('Error generando PDF:', err);
+    showToast('Error al generar el PDF. Usa Exportar CSV.', 'error');
   }
 }
 
