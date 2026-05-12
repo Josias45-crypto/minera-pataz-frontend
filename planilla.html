@@ -1021,9 +1021,23 @@ async function _continuarCierre(mes, anio) {
   if (r) {
     updateEstadoBadge(r);
     _showOverlay('Generando PDF...', 'Descarga iniciando en un momento');
-    setTimeout(() => {
+    setTimeout(async () => {
       generarPDFCierre();
       _hideOverlay();
+
+      // Cambiar automáticamente al mes siguiente (ya calculado en el backend)
+      const nextMes  = mes === 12 ? 1        : mes + 1;
+      const nextAnio = mes === 12 ? anio + 1 : anio;
+      const selAnio  = document.getElementById('sel-anio');
+      if (![...selAnio.options].some(o => parseInt(o.value) === nextAnio)) {
+        const opt = document.createElement('option');
+        opt.value = nextAnio; opt.textContent = nextAnio;
+        selAnio.prepend(opt);
+      }
+      document.getElementById('sel-mes').value = nextMes;
+      selAnio.value = nextAnio;
+      await onPeriodoChange();
+      showToast(`Planilla de ${meses[nextMes]} ${nextAnio} lista con los tareos registrados`, 'success');
     }, 600);
   } else {
     _hideOverlay();
