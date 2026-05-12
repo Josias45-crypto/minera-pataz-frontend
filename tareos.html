@@ -636,8 +636,15 @@ async function apiFetch(path, opts = {}) {
 
 // ── AUTOCOMPLETE ──────────────────────────────────────────
 async function cargarTrabajadoresLista() {
-  const data = await apiFetch('/trabajadores/?solo_activos=true');
-  if (data) trabajadoresList = data;
+  const rol = localStorage.getItem('rol') || '';
+  const tid = parseInt(localStorage.getItem('trabajador_id') || '0');
+  if (rol === 'operario' && tid) {
+    const t = await apiFetch('/trabajadores/' + tid);
+    trabajadoresList = t ? [t] : [];
+  } else {
+    const data = await apiFetch('/trabajadores/?solo_activos=true');
+    if (data) trabajadoresList = data;
+  }
 }
 
 function buscarTrabajador(query) {
@@ -695,8 +702,15 @@ async function init() {
 
 // ── TRABAJADORES ──────────────────────────────────────────
 async function loadTrabajadores() {
-  const data = await apiFetch('/trabajadores/?solo_activos=true');
-  trabajadores = data || [];
+  const rol = localStorage.getItem('rol') || '';
+  const tid = parseInt(localStorage.getItem('trabajador_id') || '0');
+  if (rol === 'operario' && tid) {
+    const t = await apiFetch('/trabajadores/' + tid);
+    trabajadores = t ? [t] : [];
+  } else {
+    const data = await apiFetch('/trabajadores/?solo_activos=true');
+    trabajadores = data || [];
+  }
   ['sel-trabajador-mes','m-trabajador'].forEach(id => {
     const sel = document.getElementById(id);
     if (!sel) return;
