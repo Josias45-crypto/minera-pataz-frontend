@@ -261,14 +261,18 @@
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">Usuarios del sistema</div>
-          <button class="btn btn-primary btn-sm ml-auto" onclick="openModal('usuario')">
+          <button class="btn btn-ghost btn-sm ml-auto" onclick="generarUsuariosMasivo()" style="margin-right:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Generar usuarios faltantes
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('usuario')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nuevo usuario
           </button>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
+            <thead><tr><th>Usuario</th><th>Trabajador vinculado</th><th>Rol</th><th>Último acceso</th><th>Estado</th><th></th></tr></thead>
             <tbody id="tbody-usuarios">
               <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted)">Cargando...</td></tr>
             </tbody>
@@ -540,27 +544,122 @@ async function loadUsuarios(){
 
 function renderUsuarios(){
   const tbody = document.getElementById('tbody-usuarios');
-  const roles = {admin:'<span class="badge orange">Admin</span>', rrhh:'<span class="badge blue">RRHH</span>', almacen:'<span class="badge yellow">Almacén</span>', supervisor:'<span class="badge green">Supervisor</span>'};
+  const rolBadge = {
+    admin:      '<span class="badge orange">Admin</span>',
+    rrhh:       '<span class="badge blue">RRHH</span>',
+    almacen:    '<span class="badge yellow">Almacén</span>',
+    supervisor: '<span class="badge green">Supervisor</span>',
+    operario:   '<span class="badge">Operario</span>',
+  };
   tbody.innerHTML = usuarios.map(u=>`
-    <tr>
+    <tr style="cursor:pointer" onclick="verTrabajadorVinculado(${u.id})">
       <td>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="user-row-avatar">${u.username.slice(0,2).toUpperCase()}</div>
-          <span class="mono">${u.username}</span>
+          <div>
+            <div class="mono">${u.username}</div>
+            ${u.bloqueado?'<div style="font-size:10px;color:var(--red)">🔒 Bloqueado</div>':''}
+          </div>
         </div>
       </td>
-      <td>${u.nombre_completo||'—'}</td>
-      <td>${roles[u.rol]||`<span class="badge">${u.rol}</span>`}</td>
-      <td class="mono">${u.ultimo_acceso||'—'}</td>
+      <td>
+        ${u.nombre_completo
+          ? `<div style="font-size:13px">${u.nombre_completo}</div>
+             ${u.trabajador_cargo?`<div style="font-size:11px;color:var(--text-muted)">${u.trabajador_cargo}</div>`:''}
+             ${u.trabajador_dni?`<div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">DNI ${u.trabajador_dni}</div>`:''}`
+          : '<span style="color:var(--text-muted);font-size:12px">Sin trabajador vinculado</span>'}
+      </td>
+      <td>${rolBadge[u.rol]||`<span class="badge">${u.rol}</span>`}</td>
+      <td class="mono" style="font-size:11px">${u.ultimo_acceso?u.ultimo_acceso.slice(0,16).replace('T',' '):'—'}</td>
       <td>${u.activo?'<span class="badge green">Activo</span>':'<span class="badge red">Inactivo</span>'}</td>
       <td>
-        <div class="row-actions">
+        <div class="row-actions" onclick="event.stopPropagation()">
           <button class="action-btn" onclick="openModal('usuario',${u.id})">Editar</button>
           <button class="action-btn" onclick="cambiarPassword(${u.id})">Contraseña</button>
           <button class="action-btn red" onclick="toggleUsuario(${u.id},${u.activo})">${u.activo?'Desactivar':'Activar'}</button>
         </div>
       </td>
     </tr>`).join('');
+}
+
+function verTrabajadorVinculado(id){
+  const u = usuarios.find(x=>x.id===id);
+  if(!u) return;
+  document.getElementById('modal-title').textContent = `Usuario: ${u.username}`;
+  document.getElementById('modal-body').innerHTML = u.trabajador_id ? `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-card);border-radius:8px;border:1px solid var(--border)">
+        <div class="user-row-avatar" style="width:44px;height:44px;font-size:16px">${(u.nombre_completo||u.username).slice(0,2).toUpperCase()}</div>
+        <div>
+          <div style="font-weight:600;font-size:15px">${u.nombre_completo||'—'}</div>
+          <div style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">DNI ${u.trabajador_dni||'—'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:var(--text-muted)">Cargo</span><br><strong>${u.trabajador_cargo||'—'}</strong></div>
+        <div><span style="color:var(--text-muted)">Rol en sistema</span><br><strong>${u.rol}</strong></div>
+        <div><span style="color:var(--text-muted)">Último acceso</span><br><strong>${u.ultimo_acceso?u.ultimo_acceso.slice(0,16).replace('T',' '):'Nunca'}</strong></div>
+        <div><span style="color:var(--text-muted)">Estado</span><br><strong>${u.activo?'Activo':'Inactivo'}${u.bloqueado?' · Bloqueado':''}</strong></div>
+      </div>
+    </div>` : `
+    <div style="text-align:center;padding:20px;color:var(--text-muted)">
+      Este usuario no tiene trabajador vinculado.
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function generarUsuariosMasivo(){
+  const sinCuenta = await apiFetch('/auth/trabajadores-sin-cuenta') || [];
+  if(sinCuenta.length === 0){
+    showToast('Todos los trabajadores ya tienen cuenta','success'); return;
+  }
+  if(!confirm(`Se crearán cuentas para ${sinCuenta.length} trabajador(es) sin usuario.\nUsername: primer nombre (minúsculas)\nContraseña: primer nombre (MAYÚSCULAS)\n\n¿Continuar?`)) return;
+
+  showToast('Generando cuentas...', 'info');
+  const r = await apiFetch('/auth/generar-usuarios-masivo', {method:'POST'});
+  if(!r){ showToast('Error al generar usuarios','error'); return; }
+
+  await loadUsuarios();
+
+  const filaCreado = r.detalle_creados.map(c=>`
+    <tr>
+      <td style="font-size:12px">${c.trabajador}</td>
+      <td class="mono" style="font-size:12px">${c.username}</td>
+      <td class="mono" style="font-size:12px">${c.password}</td>
+      <td style="font-size:12px">${c.rol}${c.rol_mapeado?' <span style="color:var(--green);font-size:10px">✓ mapeado</span>':' <span style="color:var(--text-muted);font-size:10px">por defecto</span>'}</td>
+      <td style="font-size:11px;color:var(--text-muted)">${c.cargo||'—'}</td>
+    </tr>`).join('');
+
+  const filaError = r.detalle_errores.map(e=>`
+    <tr style="background:var(--red-dim)">
+      <td colspan="5" style="font-size:12px;color:var(--red)">${e.trabajador} — ${e.error}</td>
+    </tr>`).join('');
+
+  document.getElementById('modal-title').textContent = `Resultado — ${r.creados} cuenta(s) creada(s)`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+      ✅ <strong>${r.creados}</strong> creados &nbsp;|&nbsp;
+      ❌ <strong>${r.errores}</strong> errores
+    </div>
+    <div style="max-height:350px;overflow-y:auto;border:1px solid var(--border);border-radius:6px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead style="position:sticky;top:0;background:var(--bg-card)">
+          <tr style="font-size:11px;text-transform:uppercase;color:var(--text-muted)">
+            <th style="padding:8px;text-align:left">Trabajador</th>
+            <th style="padding:8px;text-align:left">Username</th>
+            <th style="padding:8px;text-align:left">Contraseña</th>
+            <th style="padding:8px;text-align:left">Rol</th>
+            <th style="padding:8px;text-align:left">Cargo</th>
+          </tr>
+        </thead>
+        <tbody>${filaCreado}${filaError}</tbody>
+      </table>
+    </div>`;
+  document.getElementById('modal-footer').innerHTML=`
+    <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 async function toggleUsuario(id, activo){
