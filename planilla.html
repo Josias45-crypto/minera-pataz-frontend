@@ -583,21 +583,6 @@ async function init() {
 
   await loadTrabajadores();
   await loadPlanilla();
-
-  // Si el mes actual ya está cerrado, saltar automáticamente al siguiente
-  if (planillaEstado === 'cerrada') {
-    const nextMes  = mesActual === 12 ? 1 : mesActual + 1;
-    const nextAnio = mesActual === 12 ? anioActual + 1 : anioActual;
-    if (![...selAnio.options].some(o => parseInt(o.value) === nextAnio)) {
-      const opt = document.createElement('option');
-      opt.value = nextAnio; opt.textContent = nextAnio;
-      selAnio.prepend(opt);
-    }
-    selMes.value  = nextMes;
-    selAnio.value = nextAnio;
-    await loadPlanilla();
-  }
-
   await checkAutoCierre();
 }
 
