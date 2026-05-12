@@ -714,7 +714,7 @@ init();
     rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
     supervisor: ['dashboard','tareos','almacen','epps'],
     almacen:    ['dashboard','almacen','epps'],
-    operario:   ['dashboard','tareos','adelantos','permisos'],
+    operario:   ['dashboard','tareos','adelantos','permisos','planilla'],
   };
   const rol = localStorage.getItem('rol') || 'operario';
   const permitidos = PERMISOS[rol] || PERMISOS['operario'];
@@ -745,7 +745,7 @@ init();
     rrhh:       ['dashboard','trabajadores','tareos','planilla','adelantos','permisos','legajo'],
     supervisor: ['dashboard','tareos','almacen','epps'],
     almacen:    ['dashboard','almacen','epps'],
-    operario:   ['dashboard','tareos','adelantos','permisos'],
+    operario:   ['dashboard','tareos','adelantos','permisos','planilla'],
   };
   const token      = localStorage.getItem('token');
   const rol        = localStorage.getItem('rol') || 'operario';

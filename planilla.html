@@ -1592,6 +1592,8 @@ function toggleTheme() {
       +'</div>';
   }
 
+  var MESES_NOMBRE=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Setiembre','Octubre','Noviembre','Diciembre'];
+
   function ajustarLimitado(){
     ['btn-calcular','btn-cerrar','btn-exportar'].forEach(function(id){
       var el=document.getElementById(id);if(el)el.style.display='none';
@@ -1604,28 +1606,56 @@ function toggleTheme() {
       panel.innerHTML='<div style="padding:40px;text-align:center;color:var(--text-muted)">Sin trabajador vinculado.</div>';
       return;
     }
-    panel.innerHTML=
-      '<div class="panel-header"><div class="panel-title">Mi Boleta de Pago</div></div>'
-      +'<div id="boleta-personal" style="padding:20px">'
-      +'<div style="text-align:center;color:var(--text-muted)">Selecciona el periodo...</div></div>';
 
-    function cargar(){
-      var sM=document.getElementById('sel-mes');
-      var sA=document.getElementById('sel-anio');
-      var mes=sM?parseInt(sM.value):(new Date().getMonth()+1);
-      var anio=sA?parseInt(sA.value):new Date().getFullYear();
+    panel.innerHTML=
+      '<div class="panel-header"><div class="panel-title">Mis Boletas de Pago</div></div>'
+      +'<div id="historial-boletas" style="padding:14px"><div style="text-align:center;color:var(--text-muted);padding:20px">Cargando historial...</div></div>'
+      +'<div id="boleta-personal" style="padding:20px;border-top:1px solid var(--border);display:none"></div>';
+
+    function verBoleta(mes,anio){
       var bDiv=document.getElementById('boleta-personal');if(!bDiv)return;
-      bDiv.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px">Cargando...</div>';
+      bDiv.style.display='block';
+      bDiv.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px">Cargando boleta...</div>';
+      bDiv.scrollIntoView({behavior:'smooth',block:'nearest'});
       fetch(API+'/planilla/boleta/'+tid+'?mes='+mes+'&anio='+anio,{
         headers:{'Authorization':'Bearer '+(localStorage.getItem('token')||'')}
       }).then(function(r){return r.ok?r.json():null;})
         .then(function(d){var b=document.getElementById('boleta-personal');if(b)renderBoleta(d,b);})
         .catch(function(){var b=document.getElementById('boleta-personal');if(b)b.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">Error al cargar.</p>';});
     }
-    var sM=document.getElementById('sel-mes');var sA=document.getElementById('sel-anio');
-    if(sM)sM.addEventListener('change',cargar);
-    if(sA)sA.addEventListener('change',cargar);
-    setTimeout(cargar,700);
+
+    fetch(API+'/planilla/historial',{
+      headers:{'Authorization':'Bearer '+(localStorage.getItem('token')||'')}
+    }).then(function(r){return r.ok?r.json():[];})
+      .then(function(lista){
+        var hDiv=document.getElementById('historial-boletas');if(!hDiv)return;
+        var cerradas=(lista||[]).filter(function(p){return p.estado==='cerrada';});
+        if(!cerradas.length){
+          hDiv.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:30px">No hay boletas disponibles aún.</div>';
+          return;
+        }
+        hDiv.innerHTML=cerradas.map(function(p){
+          var neto=p.total_neto!=null?'S/. '+(+p.total_neto).toFixed(2):'—';
+          return '<div onclick="(function(){var m='+p.mes+',a='+p.anio+';'
+            +'document.querySelectorAll(\'.hist-row\').forEach(function(r){r.style.background=\'\';r.style.borderColor=\'var(--border)\';});'
+            +'this.style.background=\'var(--orange-glow)\';this.style.borderColor=\'var(--orange)\';'
+            +'window._verBoletaFn&&window._verBoletaFn(m,a);})()" '
+            +'class="hist-row" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--border);border-radius:6px;margin-bottom:6px;cursor:pointer;transition:all 0.15s"'
+            +' onmouseover="this.style.borderColor=\'var(--border-bright)\'" onmouseout="if(!this.style.background||this.style.background===\'\')this.style.borderColor=\'var(--border)\'">'
+            +'<div style="display:flex;align-items:center;gap:10px">'
+            +'<div style="width:36px;height:36px;background:var(--green-dim);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;color:var(--green)">'+String(p.mes).padStart(2,'0')+'</div>'
+            +'<div><div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:700">'+MESES_NOMBRE[p.mes]+' '+p.anio+'</div>'
+            +'<div style="font-size:10px;color:var(--text-muted)">Planilla cerrada</div></div></div>'
+            +'<div style="text-align:right"><div style="font-family:\'JetBrains Mono\',monospace;font-size:13px;font-weight:700;color:var(--green)">'+neto+'</div>'
+            +'<div style="font-size:10px;color:var(--text-muted)">neto</div></div>'
+            +'</div>';
+        }).join('');
+        window._verBoletaFn=verBoleta;
+      })
+      .catch(function(){
+        var hDiv=document.getElementById('historial-boletas');
+        if(hDiv)hDiv.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:20px">Error al cargar historial.</div>';
+      });
   }
 
   if(rol==='supervisor'||rol==='operario'){
