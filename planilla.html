@@ -225,6 +225,14 @@
   ::-webkit-scrollbar { width:4px; height:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:var(--border-bright); border-radius:2px; }
+
+  /* OVERLAY CIERRE */
+  .overlay-cierre { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.78); z-index:500; flex-direction:column; align-items:center; justify-content:center; gap:20px; backdrop-filter:blur(6px); }
+  .overlay-cierre.open { display:flex; }
+  .overlay-spinner { width:52px; height:52px; border:4px solid rgba(201,150,12,0.2); border-top-color:var(--orange); border-radius:50%; animation:spin 0.85s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .overlay-msg { font-family:'Barlow Condensed',sans-serif; font-size:20px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#fff; }
+  .overlay-sub { font-size:12px; color:rgba(255,255,255,0.45); font-family:'JetBrains Mono',monospace; }
 </style>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="responsive.css">
@@ -424,6 +432,13 @@
 
   </div>
 </main>
+
+<!-- OVERLAY CIERRE -->
+<div class="overlay-cierre" id="overlay-cierre">
+  <div class="overlay-spinner"></div>
+  <div class="overlay-msg" id="overlay-msg">Cerrando planilla...</div>
+  <div class="overlay-sub" id="overlay-sub">Por favor no cierres esta ventana</div>
+</div>
 
 <!-- MODAL CONCEPTOS -->
 <div class="modal-overlay" id="modal-conceptos" onclick="if(event.target===this)closeConceptos()">
@@ -961,6 +976,15 @@ function imprimirBoleta() {
 }
 
 // ── CIERRE ────────────────────────────────────────────────
+function _showOverlay(msg, sub) {
+  document.getElementById('overlay-msg').textContent = msg;
+  document.getElementById('overlay-sub').textContent = sub || 'Por favor no cierres esta ventana';
+  document.getElementById('overlay-cierre').classList.add('open');
+}
+function _hideOverlay() {
+  document.getElementById('overlay-cierre').classList.remove('open');
+}
+
 async function confirmarCierre() {
   const negativos = detalles.filter(d => d.sueldo_neto < 0);
   if (negativos.length > 0) {
@@ -976,16 +1000,20 @@ async function confirmarCierre() {
   )) return;
 
   const btnCerrar = document.getElementById('btn-cerrar');
-  btnCerrar.disabled  = true;
-  btnCerrar.innerHTML = 'Cerrando...';
+  btnCerrar.disabled = true;
+  _showOverlay('Cerrando planilla...');
 
   const r = await apiFetch(`/planilla/cerrar?mes=${mes}&anio=${anio}`, { method:'POST' });
 
   if (r) {
     updateEstadoBadge(r);
-    showToast('Planilla cerrada. Generando PDF...', 'success');
-    setTimeout(() => generarPDFCierre(), 600);
+    _showOverlay('Generando PDF...', 'Descarga iniciando en un momento');
+    setTimeout(() => {
+      generarPDFCierre();
+      _hideOverlay();
+    }, 600);
   } else {
+    _hideOverlay();
     btnCerrar.disabled  = false;
     btnCerrar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Cerrar Planilla`;
     showToast('Error al cerrar la planilla', 'error');
