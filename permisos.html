@@ -228,6 +228,10 @@
     <div class="form-group">
       <label class="form-label">Motivo</label>
       <input class="form-input" type="text" id="inp-motivo" placeholder="Ej: Cita médica">
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:10px;color:var(--text-muted);">Mínimo 10 caracteres</span>
+        <span id="motivo-contador" style="font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;"></span>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -386,7 +390,17 @@ function abrirModal(){
 function cerrarModal(){
   document.getElementById('modal').classList.remove('open');
   document.getElementById('inp-motivo').value='';
+  actualizarContadorMotivo('');
 }
+function actualizarContadorMotivo(val){
+  const cnt = document.getElementById('motivo-contador');
+  if(!cnt) return;
+  const n = val.length;
+  if(n === 0){ cnt.textContent=''; cnt.style.color='var(--text-muted)'; return; }
+  cnt.textContent = n < 10 ? `${n}/10` : `${n} ✓`;
+  cnt.style.color = n < 10 ? 'var(--red)' : 'var(--green)';
+}
+document.getElementById('inp-motivo').addEventListener('input', function(){ actualizarContadorMotivo(this.value); });
 async function guardarPermiso(){
   const trabajador_id = _esOperario ? _tid : parseInt(document.getElementById('sel-trabajador').value);
   const tipo_permiso_id = parseInt(document.getElementById('sel-tipo').value);
