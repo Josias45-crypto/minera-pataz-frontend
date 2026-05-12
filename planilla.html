@@ -440,6 +440,26 @@
   <div class="overlay-sub" id="overlay-sub">Por favor no cierres esta ventana</div>
 </div>
 
+<!-- MODAL ALERTA TAREOS MES SIGUIENTE -->
+<div class="modal-overlay" id="modal-tareos-alerta">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--orange)">Tareos del mes siguiente</div>
+      <button class="modal-close" onclick="document.getElementById('modal-tareos-alerta').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="tareos-alerta-msg" style="font-size:14px;line-height:1.7;color:var(--text-secondary)"></p>
+      <p style="margin-top:12px;padding:10px 12px;background:var(--blue-dim);border:1px solid var(--blue);border-radius:6px;font-size:12px;color:var(--blue)">
+        Estos tareos <strong>no serán afectados</strong> por el cierre — quedarán disponibles para la siguiente planilla.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('modal-tareos-alerta').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirmar-igual">Entendido — Cerrar de todas formas</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONCEPTOS -->
 <div class="modal-overlay" id="modal-conceptos" onclick="if(event.target===this)closeConceptos()">
   <div class="modal" style="max-width:560px">
@@ -985,14 +1005,7 @@ function _hideOverlay() {
   document.getElementById('overlay-cierre').classList.remove('open');
 }
 
-async function confirmarCierre() {
-  const negativos = detalles.filter(d => d.sueldo_neto < 0);
-  if (negativos.length > 0) {
-    showToast(`${negativos.length} trabajador(es) con neto negativo. Revisa antes de cerrar.`, 'error');
-    return;
-  }
-  const mes  = getMes();
-  const anio = getAnio();
+async function _continuarCierre(mes, anio) {
   if (!confirm(
     `¿Cerrar la planilla de ${meses[mes]} ${anio}?\n\n` +
     `Esta acción es IRREVERSIBLE.\n` +
@@ -1018,6 +1031,35 @@ async function confirmarCierre() {
     btnCerrar.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Cerrar Planilla`;
     showToast('Error al cerrar la planilla', 'error');
   }
+}
+
+async function confirmarCierre() {
+  const negativos = detalles.filter(d => d.sueldo_neto < 0);
+  if (negativos.length > 0) {
+    showToast(`${negativos.length} trabajador(es) con neto negativo. Revisa antes de cerrar.`, 'error');
+    return;
+  }
+  const mes  = getMes();
+  const anio = getAnio();
+
+  // Verificar tareos del mes siguiente antes de confirmar
+  const info = await apiFetch(`/planilla/tareos-mes-siguiente?mes=${mes}&anio=${anio}`);
+  if (info && info.count > 0) {
+    const nombreSig = meses[info.mes];
+    document.getElementById('tareos-alerta-msg').innerHTML =
+      `Hay <strong>${info.count} tareo${info.count !== 1 ? 's' : ''}</strong> de ` +
+      `<strong>${nombreSig} ${info.anio}</strong> ya registrados. ` +
+      `Estos pasarán automáticamente a la siguiente planilla sin ningún problema.`;
+    const modal = document.getElementById('modal-tareos-alerta');
+    modal.classList.add('open');
+    document.getElementById('btn-confirmar-igual').onclick = () => {
+      modal.classList.remove('open');
+      _continuarCierre(mes, anio);
+    };
+    return;
+  }
+
+  _continuarCierre(mes, anio);
 }
 
 // ── PDF DE CIERRE ─────────────────────────────────────────
