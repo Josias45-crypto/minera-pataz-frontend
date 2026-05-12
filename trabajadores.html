@@ -272,29 +272,26 @@
   .action-btn:hover { border-color: var(--orange); color: var(--orange); }
   .action-btn.danger:hover { border-color: var(--red); color: var(--red); }
 
-  /* ── PAGINACIÓN ──────────────────────────────────── */
-  .pagination {
-    display: flex; align-items: center; gap: 6px;
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-panel);
-  }
-  .page-info {
+  /* ── SCROLL INFINITO ─────────────────────────────── */
+  .scroll-loader {
+    display: none; align-items: center; justify-content: center;
+    gap: 8px; padding: 14px;
     font-size: 11px; color: var(--text-muted);
     font-family: 'JetBrains Mono', monospace;
-    margin-right: auto;
+    border-top: 1px solid var(--border);
   }
-  .page-btn {
-    width: 28px; height: 28px;
-    border-radius: 4px; border: 1px solid var(--border);
-    background: transparent; color: var(--text-secondary);
-    cursor: pointer; font-size: 12px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s; font-family: 'JetBrains Mono', monospace;
+  .scroll-loader.visible { display: flex; }
+  .scroll-loader-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--orange); opacity: 0.4;
+    animation: dotpulse 1s infinite ease-in-out;
   }
-  .page-btn:hover { border-color: var(--orange); color: var(--orange); }
-  .page-btn.active { background: var(--orange); color: #000; border-color: var(--orange); font-weight: 700; }
-  .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .scroll-loader-dot:nth-child(2) { animation-delay: 0.2s; }
+  .scroll-loader-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotpulse {
+    0%, 80%, 100% { opacity: 0.4; transform: scale(1); }
+    40%           { opacity: 1;   transform: scale(1.3); }
+  }
 
   /* ── MODAL ───────────────────────────────────────── */
   .modal-overlay {
@@ -620,12 +617,12 @@
           </tbody>
         </table>
       </div>
-      <div class="pagination">
-        <div class="page-info" id="page-info">—</div>
-        <button class="page-btn" id="btn-prev" onclick="changePage(-1)">‹</button>
-        <div id="page-numbers"></div>
-        <button class="page-btn" id="btn-next" onclick="changePage(1)">›</button>
+      <div id="scroll-loader" class="scroll-loader">
+        <div class="scroll-loader-dot"></div>
+        <div class="scroll-loader-dot"></div>
+        <div class="scroll-loader-dot"></div>
       </div>
+      <div id="scroll-sentinel" style="height:1px;"></div>
     </div>
   </div>
 </main>
@@ -822,11 +819,11 @@
 const API = window.BACKEND_URL || 'http://127.0.0.1:8000';
 const TOKEN = localStorage.getItem('token') || '';
 
-let allData   = [];
-let filtered  = [];
-let currentPage = 1;
-const PER_PAGE  = 10;
-let editingId   = null;
+let allData        = [];
+let filtered       = [];
+let displayedCount = 0;
+const CHUNK        = 15;
+let editingId      = null;
 
 // Catálogos
 let cargos = [], areas = [], socios = [], turnos = [];
@@ -935,10 +932,50 @@ async function loadTrabajadores() {
 }
 
 // ── RENDER TABLA ──────────────────────────────────────────
+function rowHTML(t) {
+  const cargo = cargos.find(c => c.id === t.cargo_id);
+  const area  = areas.find(a => a.id === t.area_id);
+  const socio = socios.find(s => s.id === t.socio_id);
+  const ini   = t.nombres.charAt(0) + t.apellidos.charAt(0);
+  return `
+  <tr onclick="openDetail(${t.id})">
+    <td>
+      <div class="avatar-cell">
+        <div class="avatar">${ini.toUpperCase()}</div>
+        <div class="avatar-info">
+          <div class="aname">${t.apellidos}, ${t.nombres}</div>
+          <div class="adni">${t.dni}</div>
+        </div>
+      </div>
+    </td>
+    <td class="mono">${t.fotocheck_codigo || '—'}</td>
+    <td>${cargo ? cargo.nombre : '—'}</td>
+    <td>${area  ? area.nombre  : '—'}</td>
+    <td>${socio ? socio.nombre : '—'}</td>
+    <td class="mono">S/. ${parseFloat(t.tarifa_diaria).toFixed(2)}</td>
+    <td>
+      <span class="badge ${t.sistema_pension === 'AFP' ? 'blue' : 'yellow'}">
+        ${t.sistema_pension} ${t.porcentaje_pension}%
+      </span>
+    </td>
+    <td class="mono">${t.fecha_ingreso}</td>
+    <td>
+      <span class="badge ${t.activo ? 'green' : 'red'}">
+        ${t.activo ? 'Activo' : 'Inactivo'}
+      </span>
+    </td>
+    <td>
+      <div class="row-actions">
+        <button class="action-btn" onclick="event.stopPropagation();editTrabajador(${t.id})">Editar</button>
+        <button class="action-btn danger" onclick="event.stopPropagation();desactivar(${t.id}, '${t.nombres}')">Baja</button>
+      </div>
+    </td>
+  </tr>`;
+}
+
 function renderTable() {
   const tbody = document.getElementById('tbody');
-  const start = (currentPage - 1) * PER_PAGE;
-  const page  = filtered.slice(start, start + PER_PAGE);
+  displayedCount = 0;
 
   if (filtered.length === 0) {
     tbody.innerHTML = `
@@ -952,76 +989,26 @@ function renderTable() {
         </div>
       </td></tr>
     `;
+    document.getElementById('scroll-loader').classList.remove('visible');
     return;
   }
 
-  tbody.innerHTML = page.map(t => {
-    const cargo  = cargos.find(c => c.id === t.cargo_id);
-    const area   = areas.find(a => a.id === t.area_id);
-    const socio  = socios.find(s => s.id === t.socio_id);
-    const ini    = t.nombres.charAt(0) + t.apellidos.charAt(0);
-
-    return `
-    <tr onclick="openDetail(${t.id})">
-      <td>
-        <div class="avatar-cell">
-          <div class="avatar">${ini.toUpperCase()}</div>
-          <div class="avatar-info">
-            <div class="aname">${t.apellidos}, ${t.nombres}</div>
-            <div class="adni">${t.dni}</div>
-          </div>
-        </div>
-      </td>
-      <td class="mono">${t.fotocheck_codigo || '—'}</td>
-      <td>${cargo ? cargo.nombre : '—'}</td>
-      <td>${area  ? area.nombre  : '—'}</td>
-      <td>${socio ? socio.nombre : '—'}</td>
-      <td class="mono">S/. ${parseFloat(t.tarifa_diaria).toFixed(2)}</td>
-      <td>
-        <span class="badge ${t.sistema_pension === 'AFP' ? 'blue' : 'yellow'}">
-          ${t.sistema_pension} ${t.porcentaje_pension}%
-        </span>
-      </td>
-      <td class="mono">${t.fecha_ingreso}</td>
-      <td>
-        <span class="badge ${t.activo ? 'green' : 'red'}">
-          ${t.activo ? 'Activo' : 'Inactivo'}
-        </span>
-      </td>
-      <td>
-        <div class="row-actions">
-          <button class="action-btn" onclick="event.stopPropagation();editTrabajador(${t.id})">Editar</button>
-          <button class="action-btn danger" onclick="event.stopPropagation();desactivar(${t.id}, '${t.nombres}')">Baja</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  renderPagination();
-  document.getElementById('page-info').textContent =
-    `${start+1}–${Math.min(start+PER_PAGE, filtered.length)} de ${filtered.length}`;
+  tbody.innerHTML = '';
+  loadMore();
 }
 
-// ── PAGINACIÓN ────────────────────────────────────────────
-function renderPagination() {
-  const total = Math.ceil(filtered.length / PER_PAGE);
-  const nums  = document.getElementById('page-numbers');
-  nums.innerHTML = '';
-  for (let i = 1; i <= total; i++) {
-    const b = document.createElement('button');
-    b.className = 'page-btn' + (i === currentPage ? ' active' : '');
-    b.textContent = i;
-    b.onclick = () => { currentPage = i; renderTable(); };
-    nums.appendChild(b);
+function loadMore() {
+  if (displayedCount >= filtered.length) {
+    document.getElementById('scroll-loader').classList.remove('visible');
+    return;
   }
-  document.getElementById('btn-prev').disabled = currentPage === 1;
-  document.getElementById('btn-next').disabled = currentPage === total;
-}
+  const tbody = document.getElementById('tbody');
+  const chunk = filtered.slice(displayedCount, displayedCount + CHUNK);
+  tbody.insertAdjacentHTML('beforeend', chunk.map(rowHTML).join(''));
+  displayedCount += chunk.length;
 
-function changePage(dir) {
-  const total = Math.ceil(filtered.length / PER_PAGE);
-  currentPage = Math.max(1, Math.min(total, currentPage + dir));
-  renderTable();
+  const hayMas = displayedCount < filtered.length;
+  document.getElementById('scroll-loader').classList.toggle('visible', hayMas);
 }
 
 // ── FILTRO ────────────────────────────────────────────────
@@ -1043,9 +1030,14 @@ function filterTable() {
     return matchQ && matchE && matchC;
   });
 
-  currentPage = 1;
   renderTable();
 }
+
+// ── SCROLL INFINITO ───────────────────────────────────────
+const _scrollObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) loadMore();
+}, { threshold: 0.1 });
+_scrollObserver.observe(document.getElementById('scroll-sentinel'));
 
 // ── MODAL ─────────────────────────────────────────────────
 function openModal(id = null) {
